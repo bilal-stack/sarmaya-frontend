@@ -43,57 +43,102 @@ const STORAGE_KEY = 'galsi_user_data';
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+// Helper function to check if token is expired
+const isTokenExpired = (expiresIn?: number, lastLoginTime?: string): boolean => {
+  if (!expiresIn || !lastLoginTime) return false;
+
+  const loginTimestamp = new Date(lastLoginTime).getTime();
+  const expirationTime = loginTimestamp + expiresIn * 1000; // Convert seconds to milliseconds
+  const currentTime = Date.now();
+
+  return currentTime >= expirationTime;
+};
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<UserData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
 
+  // Load user from localStorage on mount
   useEffect(() => {
-    if (typeof window === 'undefined') {
-      return;
-    }
+    const loadUser = () => {
+      try {
+        const storedData = localStorage.getItem(STORAGE_KEY);
+        if (storedData) {
+          const parsedUser = JSON.parse(storedData) as UserData;
 
-    try {
-      const storedUser = window.localStorage.getItem(STORAGE_KEY);
-      if (storedUser) {
-        setUser(JSON.parse(storedUser));
+          // Check if token is expired
+          if (isTokenExpired(parsedUser.expires_in, parsedUser.last_login_at)) {
+            console.log('Token expired, clearing user data');
+            localStorage.removeItem(STORAGE_KEY);
+            setUser(null);
+          } else {
+            setUser(parsedUser);
+          }
+        }
+      } catch (error) {
+        console.error('Error loading user from localStorage:', error);
+        localStorage.removeItem(STORAGE_KEY);
+      } finally {
+        setIsLoading(false);
       }
-    } catch (error) {
-      console.error("Failed to parse user data from localStorage", error);
-      window.localStorage.removeItem(STORAGE_KEY);
-    } finally {
-      setIsLoading(false);
-    }
+    };
+
+    loadUser();
   }, []);
 
-  const login = useCallback((userData: UserData) => {
-    if (typeof window === 'undefined') {
-      return;
-    }
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(userData));
-    setUser(userData);
-    router.push('/dashboard');
-  }, [router]);
+  // Check token expiration periodically (every minute)
+  useEffect(() => {
+    if (!user) return;
+
+    const checkTokenExpiration = () => {
+      if (isTokenExpired(user.expires_in, user.last_login_at)) {
+        console.log('Token expired during session, logging out');
+        logout();
+      }
+    };
+
+    // Check immediately
+    checkTokenExpiration();
+
+    // Check every minute
+    const interval = setInterval(checkTokenExpiration, 60000);
+
+    return () => clearInterval(interval);
+  }, [user]);
+
+  const login = useCallback(
+    (userData: UserData) => {
+      // Add last login timestamp if not present
+      const userDataWithTimestamp = {
+        ...userData,
+        last_login_at: userData.last_login_at || new Date().toISOString(),
+      };
+
+      setUser(userDataWithTimestamp);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(userDataWithTimestamp));
+      router.push('/dashboard');
+    },
+    [router],
+  );
 
   const logout = useCallback(() => {
-    if (typeof window === 'undefined') {
-      return;
-    }
-    window.localStorage.removeItem(STORAGE_KEY);
     setUser(null);
+    localStorage.removeItem(STORAGE_KEY);
     router.push('/login');
   }, [router]);
 
-  const value = useMemo<AuthContextType>(
-    () => ({ user, login, logout, isLoading }),
+  const value = useMemo(
+    () => ({
+      user,
+      login,
+      logout,
+      isLoading,
+    }),
     [user, login, logout, isLoading],
   );
 
-  return (
-    <AuthContext.Provider value={value}>
-      {isLoading ? null : children}
-    </AuthContext.Provider>
-  );
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
 export function useAuth() {

@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/context/auth-context';
 import { useToast } from '@/hooks/use-toast';
 import { API_ENDPOINTS } from '@/lib/api-config';
+import { apiFetch } from '@/lib/api-config';
 import type { Invoice, InvoiceStatus, InvoiceFilters } from '@/types/invoice';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -48,12 +49,11 @@ export default function InvoicesPage() {
   });
 
   const fetchInvoices = async () => {
-    // Don't check auth if still loading
     if (authLoading) return;
     
     if (!user?.access_token) {
       toast({ variant: 'destructive', title: 'Authentication required' });
-      router.push('/login'); // Redirect to login
+      router.push('/login');
       return;
     }
 
@@ -68,11 +68,11 @@ export default function InvoicesPage() {
       if (filters.limit) params.append('limit', filters.limit.toString());
       if (filters.offset) params.append('offset', filters.offset.toString());
 
-      const response = await fetch(`${API_ENDPOINTS.INVOICES.LIST}?${params.toString()}`, {
-        headers: {
-          'Authorization': `Bearer ${user.access_token}`,
-        },
-      });
+      const response = await apiFetch(
+        `${API_ENDPOINTS.INVOICES.LIST}?${params.toString()}`,
+        {},
+        user.access_token
+      );
 
       if (!response.ok) {
         throw new Error('Failed to fetch invoices');
@@ -106,7 +106,7 @@ export default function InvoicesPage() {
   const formatCurrency = (amount: string) => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
-      currency: 'USD',
+      currency: 'PKR',
     }).format(parseFloat(amount));
   };
 
@@ -265,7 +265,6 @@ export default function InvoicesPage() {
                       </div>
                       
                       <div className="flex items-center gap-2 text-sm">
-                        <DollarSign className="h-4 w-4 text-muted-foreground" />
                         <span className="font-semibold text-lg">
                           {formatCurrency(invoice.total_amount)}
                         </span>

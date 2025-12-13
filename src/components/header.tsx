@@ -5,8 +5,7 @@ import { ActiveLink } from '@/components/navigation/active-link';
 import { UserNavLoader } from '@/components/header/user-nav-loader';
 
 const navLinks = [
-    { href: "/ai-tools", label: "AI Tools" },
-    { href: "/pricing", label: "Pricing" },
+    { href: "/ai-tools", label: "AI Tools" }
 ]
 
 export function Header() {
