@@ -1,3 +1,8 @@
+'use client';
+
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { useAuth } from '@/context/auth-context';
 import {
   Card,
   CardContent,
@@ -6,7 +11,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { FileText, Upload, Send, CheckCircle, XCircle, DollarSign, Bot, MessageSquare, ScanSearch, ArrowRight } from 'lucide-react';
+import { FileText, Upload, Send, CheckCircle, XCircle, DollarSign, Bot, MessageSquare, ScanSearch, ArrowRight, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 
 const tools = [
@@ -73,6 +78,29 @@ const tools = [
 ];
 
 export default function AiToolsPage() {
+  const router = useRouter();
+  const { user, isLoading } = useAuth();
+
+  useEffect(() => {
+    if (!isLoading && !user) {
+      router.push('/login');
+    }
+  }, [user, isLoading, router]);
+
+  // Show loading while checking authentication
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center h-[calc(100vh-200px)]">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  // Don't render anything if not authenticated (redirect is in progress)
+  if (!user) {
+    return null;
+  }
+
   return (
     <div className="flex flex-col items-center p-4 md:p-8">
       <div className="text-center mb-12">

@@ -1,4 +1,4 @@
-# **App Name**: Galsi Prototype
+# **App Name**: Sarmaya Prototype
 
 ## Core Features:
 
