@@ -11,69 +11,39 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { FileText, Upload, Send, CheckCircle, XCircle, DollarSign, Bot, MessageSquare, ScanSearch, ArrowRight, Loader2 } from 'lucide-react';
+import { FileText, Upload, Bot, MessageSquare, ScanSearch, ArrowRight, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 
 const tools = [
   {
     name: 'Invoices',
-    description: 'View and manage all your invoices in one place.',
+    description: 'View and manage all your invoices. Submit, approve, reject, or mark as paid directly from invoice details.',
     icon: <FileText className="h-8 w-8 text-primary" />,
     link: '/ai-tools/invoices',
   },
   {
-    name: 'Invoice Details',
-    description: 'Access detailed information and history for any invoice.',
-    icon: <FileText className="h-8 w-8 text-primary" />,
-    link: '/ai-tools/invoice-details',
-  },
-  {
     name: 'Invoice Upload',
-    description: 'Upload and process new invoices with AI-powered extraction.',
+    description: 'Upload and process new invoices with AI-powered OCR extraction and duplicate detection.',
     icon: <Upload className="h-8 w-8 text-primary" />,
     link: '/ai-tools/invoice-upload',
   },
   {
-    name: 'Invoice Submit for Approval',
-    description: 'Submit invoices for approval workflow and track their status.',
-    icon: <Send className="h-8 w-8 text-primary" />,
-    link: '/ai-tools/invoice-submit',
-  },
-   {
-    name: 'Invoice Approve',
-    description: 'Review and approve pending invoices with a single click.',
-    icon: <CheckCircle className="h-8 w-8 text-primary" />,
-    link: '/ai-tools/invoice-approve',
-  },
-  {
-    name: 'Invoice Reject',
-    description: 'Reject invoices and provide feedback for corrections.',
-    icon: <XCircle className="h-8 w-8 text-primary" />,
-    link: '/ai-tools/invoice-reject',
-  },
-  {
-    name: 'Invoice Mark as paid',
-    description: 'Mark invoices as paid and update payment records.',
-    icon: <DollarSign className="h-8 w-8 text-primary" />,
-    link: '/ai-tools/invoice-mark-paid',
+    name: 'Detect Duplicates',
+    description: 'Automatically identify and flag duplicate invoices across your system to prevent errors.',
+    icon: <ScanSearch className="h-8 w-8 text-primary" />,
+    link: '/ai-tools/detect-duplicate',
   },
   {
     name: 'AI Chatbot',
-    description: 'Get instant answers and assistance from our AI-powered chatbot.',
+    description: 'Get instant answers and assistance from our AI-powered chatbot about your invoices.',
     icon: <Bot className="h-8 w-8 text-primary" />,
     link: '/ai-tools/ai-chatbot',
   },
   {
-    name: 'Query Chatbot',
-    description: 'Ask complex questions and get detailed insights from our query assistant.',
+    name: 'Query Assistant',
+    description: 'Ask complex questions and get detailed insights from our advanced query assistant.',
     icon: <MessageSquare className="h-8 w-8 text-primary" />,
     link: '/ai-tools/query-chatbot',
-  },
-  {
-    name: 'Detect Duplicate Tool',
-    description: 'Automatically identify and flag duplicate invoices to prevent errors.',
-    icon: <ScanSearch className="h-8 w-8 text-primary" />,
-    link: '/ai-tools/detect-duplicate',
   },
 ];
 
