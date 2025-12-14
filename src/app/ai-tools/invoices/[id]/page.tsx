@@ -6,13 +6,44 @@ import { useAuth } from '@/context/auth-context';
 import { useToast } from '@/hooks/use-toast';
 import { apiFetch, API_ENDPOINTS } from '@/lib/api-config';
 import type { InvoiceDetail, ApiError } from '@/types/invoice';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { Loader2, ArrowLeft, FileText, Calendar, User, Clock, Sparkles } from 'lucide-react';
+import {
+  Loader2,
+  ArrowLeft,
+  FileText,
+  Calendar,
+  User,
+  Clock,
+  Sparkles,
+} from 'lucide-react';
 import { format } from 'date-fns';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
 
 const STATUS_COLORS: Record<string, string> = {
   draft: 'bg-gray-500',
@@ -41,12 +72,18 @@ export default function InvoiceDetailPage() {
   const [invoice, setInvoice] = useState<InvoiceDetail | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isApproving, setIsApproving] = useState(false);
+  const [isRejecting, setIsRejecting] = useState(false);
+  const [isMarkingPaid, setIsMarkingPaid] = useState(false);
+  const [showRejectDialog, setShowRejectDialog] = useState(false);
+  const [rejectionReason, setRejectionReason] = useState('');
 
   const invoiceId = params.id as string;
 
   const fetchInvoiceDetail = async () => {
     if (authLoading) return;
-    
+
     if (!user?.access_token) {
       toast({ variant: 'destructive', title: 'Authentication required' });
       router.push('/login');
@@ -71,16 +108,22 @@ export default function InvoiceDetailPage() {
 
       if (!response.ok) {
         const errorData: ApiError = await response.json();
-        
+
         if (Array.isArray(errorData.detail)) {
-          const uuidError = errorData.detail.find(e => e.type === 'uuid_parsing');
+          const uuidError = errorData.detail.find(
+            (e) => e.type === 'uuid_parsing'
+          );
           if (uuidError) {
             throw new Error('Invalid invoice ID format');
           }
           throw new Error(errorData.detail[0]?.msg || 'Failed to fetch invoice');
         }
-        
-        throw new Error(typeof errorData.detail === 'string' ? errorData.detail : 'Invoice not found');
+
+        throw new Error(
+          typeof errorData.detail === 'string'
+            ? errorData.detail
+            : 'Invoice not found'
+        );
       }
 
       const data: InvoiceDetail = await response.json();
@@ -118,6 +161,147 @@ export default function InvoiceDetailPage() {
     }
   };
 
+  const handleSubmitForApproval = async () => {
+    if (!user?.access_token || !invoice) return;
+
+    setIsSubmitting(true);
+
+    try {
+      const response = await apiFetch(
+        API_ENDPOINTS.INVOICES.SUBMIT(invoice.id),
+        { method: 'POST' },
+        user.access_token
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || 'Failed to submit invoice');
+      }
+
+      toast({
+        title: 'Success',
+        description: 'Invoice submitted for approval successfully',
+      });
+
+      fetchInvoiceDetail();
+    } catch (error: any) {
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: error.message || 'Failed to submit invoice',
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleApprove = async () => {
+    if (!user?.access_token || !invoice) return;
+
+    setIsApproving(true);
+
+    try {
+      const response = await apiFetch(
+        API_ENDPOINTS.INVOICES.APPROVE(invoice.id),
+        { method: 'POST' },
+        user.access_token
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || 'Failed to approve invoice');
+      }
+
+      toast({
+        title: 'Success',
+        description: 'Invoice approved successfully',
+      });
+
+      fetchInvoiceDetail();
+    } catch (error: any) {
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: error.message || 'Failed to approve invoice',
+      });
+    } finally {
+      setIsApproving(false);
+    }
+  };
+
+  const handleReject = async () => {
+    if (!user?.access_token || !invoice || !rejectionReason.trim()) return;
+
+    setIsRejecting(true);
+
+    try {
+      const response = await apiFetch(
+        API_ENDPOINTS.INVOICES.REJECT(invoice.id),
+        {
+          method: 'POST',
+          body: JSON.stringify({ reason: rejectionReason }),
+        },
+        user.access_token
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || 'Failed to reject invoice');
+      }
+
+      toast({
+        title: 'Success',
+        description: 'Invoice rejected successfully',
+      });
+
+      setShowRejectDialog(false);
+      setRejectionReason('');
+      fetchInvoiceDetail();
+    } catch (error: any) {
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: error.message || 'Failed to reject invoice',
+      });
+    } finally {
+      setIsRejecting(false);
+    }
+  };
+
+  const handleMarkAsPaid = async () => {
+    if (!user?.access_token || !invoice) return;
+
+    setIsMarkingPaid(true);
+
+    try {
+      const response = await apiFetch(
+        API_ENDPOINTS.INVOICES.MARK_PAID(invoice.id),
+        { method: 'POST' },
+        user.access_token
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || 'Failed to mark invoice as paid');
+      }
+
+      toast({
+        title: 'Success',
+        description: 'Invoice marked as paid successfully',
+      });
+
+      fetchInvoiceDetail();
+    } catch (error: any) {
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: error.message || 'Failed to mark invoice as paid',
+      });
+    } finally {
+      setIsMarkingPaid(false);
+    }
+  };
+
   if (authLoading || isLoading) {
     return (
       <div className="flex items-center justify-center h-[calc(100vh-200px)]">
@@ -131,7 +315,9 @@ export default function InvoiceDetailPage() {
       <div className="flex flex-col items-center justify-center h-[calc(100vh-200px)] gap-4">
         <FileText className="h-16 w-16 text-muted-foreground" />
         <h2 className="text-2xl font-bold">Authentication Required</h2>
-        <p className="text-muted-foreground">Please log in to view invoice details</p>
+        <p className="text-muted-foreground">
+          Please log in to view invoice details
+        </p>
         <Button onClick={() => router.push('/login')}>Go to Login</Button>
       </div>
     );
@@ -140,7 +326,11 @@ export default function InvoiceDetailPage() {
   if (error || !invoice) {
     return (
       <div className="container mx-auto p-6">
-        <Button variant="ghost" onClick={() => router.back()} className="mb-4">
+        <Button
+          variant="ghost"
+          onClick={() => router.back()}
+          className="mb-4"
+        >
           <ArrowLeft className="mr-2 h-4 w-4" />
           Back
         </Button>
@@ -148,7 +338,9 @@ export default function InvoiceDetailPage() {
           <CardContent className="flex flex-col items-center justify-center py-12">
             <FileText className="h-12 w-12 text-muted-foreground mb-4" />
             <h3 className="text-lg font-semibold">Invoice Not Found</h3>
-            <p className="text-sm text-muted-foreground">{error || 'The requested invoice could not be found'}</p>
+            <p className="text-sm text-muted-foreground">
+              {error || 'The requested invoice could not be found'}
+            </p>
           </CardContent>
         </Card>
       </div>
@@ -203,11 +395,15 @@ export default function InvoiceDetailPage() {
               <div className="space-y-3">
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Subtotal</span>
-                  <span className="font-medium">{formatCurrency(invoice.subtotal_amount, invoice.currency)}</span>
+                  <span className="font-medium">
+                    {formatCurrency(invoice.subtotal_amount, invoice.currency)}
+                  </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Tax</span>
-                  <span className="font-medium">{formatCurrency(invoice.tax_amount, invoice.currency)}</span>
+                  <span className="font-medium">
+                    {formatCurrency(invoice.tax_amount, invoice.currency)}
+                  </span>
                 </div>
                 <Separator />
                 <div className="flex justify-between text-lg">
@@ -223,7 +419,9 @@ export default function InvoiceDetailPage() {
                   <Separator />
                   <div className="space-y-2">
                     <p className="text-sm font-medium">Description</p>
-                    <p className="text-sm text-muted-foreground">{invoice.description}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {invoice.description}
+                    </p>
                   </div>
                 </>
               )}
@@ -236,11 +434,14 @@ export default function InvoiceDetailPage() {
               <CardHeader>
                 <CardTitle>Line Items</CardTitle>
                 <CardDescription>
-                  {invoice.line_items.length} item{invoice.line_items.length !== 1 ? 's' : ''} • 
-                  {invoice.ocr_extracted_data?.raw_data?.line_items_count && 
-                    ` ${invoice.ocr_extracted_data.raw_data.line_items_count} detected by OCR`}
-                  {invoice.ocr_extracted_data?.ai_corrections?.line_items_merged && 
-                    ` • ${invoice.ocr_extracted_data.ai_corrections.line_items_merged.length} merged by AI`}
+                  {invoice.line_items.length} item
+                  {invoice.line_items.length !== 1 ? 's' : ''} •
+                  {invoice.ocr_extracted_data?.raw_data?.line_items_count && (
+                    ` ${invoice.ocr_extracted_data.raw_data.line_items_count} detected by OCR`
+                  )}
+                  {invoice.ocr_extracted_data?.ai_corrections?.line_items_merged && (
+                    ` • ${invoice.ocr_extracted_data.ai_corrections.line_items_merged.length} merged by AI`
+                  )}
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -315,12 +516,17 @@ export default function InvoiceDetailPage() {
               <CardHeader>
                 <CardTitle>OCR Data</CardTitle>
                 <CardDescription>
-                  Confidence: {invoice.ocr_confidence}% 
+                  Confidence: {invoice.ocr_confidence}%
                   {invoice.ocr_extracted_data.ai_enhanced && (
-                    <Badge variant="outline" className="ml-2">AI Enhanced</Badge>
+                    <Badge variant="outline" className="ml-2">
+                      AI Enhanced
+                    </Badge>
                   )}
                   {invoice.ocr_extracted_data.raw_data?.pages && (
-                    <span className="ml-2">• {invoice.ocr_extracted_data.raw_data.pages} page{invoice.ocr_extracted_data.raw_data.pages !== 1 ? 's' : ''}</span>
+                    <span className="ml-2">
+                      • {invoice.ocr_extracted_data.raw_data.pages} page
+                      {invoice.ocr_extracted_data.raw_data.pages !== 1 ? 's' : ''}
+                    </span>
                   )}
                 </CardDescription>
               </CardHeader>
@@ -328,45 +534,89 @@ export default function InvoiceDetailPage() {
                 <div className="grid gap-2 text-sm">
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Extracted Vendor:</span>
-                    <span className="font-medium">{invoice.ocr_extracted_data.vendor_name}</span>
+                    <span className="font-medium">
+                      {invoice.ocr_extracted_data.vendor_name}
+                    </span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Extracted Invoice #:</span>
-                    <span className="font-medium">{invoice.ocr_extracted_data.invoice_number}</span>
+                    <span className="font-medium">
+                      {invoice.ocr_extracted_data.invoice_number}
+                    </span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Extracted Date:</span>
-                    <span className="font-medium">{invoice.ocr_extracted_data.invoice_date}</span>
+                    <span className="font-medium">
+                      {invoice.ocr_extracted_data.invoice_date}
+                    </span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Currency:</span>
-                    <span className="font-medium">{invoice.ocr_extracted_data.currency}</span>
+                    <span className="font-medium">
+                      {invoice.ocr_extracted_data.currency}
+                    </span>
                   </div>
                 </div>
 
                 {/* AI Corrections Info */}
-                {invoice.ocr_extracted_data.ai_corrections && 
-                 (invoice.ocr_extracted_data.ai_corrections.line_items_merged?.length > 0 || 
-                  Object.keys(invoice.ocr_extracted_data.ai_corrections.descriptions_fixed || {}).length > 0) && (
-                  <div className="rounded-lg border border-blue-500/50 bg-blue-500/10 p-3">
-                    <div className="flex items-start gap-2">
-                      <Sparkles className="h-4 w-4 text-blue-500 mt-0.5" />
-                      <div className="space-y-1">
-                        <p className="text-sm font-medium text-blue-500">AI Enhancements Applied</p>
-                        {invoice.ocr_extracted_data.ai_corrections.line_items_merged?.length > 0 && (
-                          <p className="text-xs text-muted-foreground">
-                            Merged {invoice.ocr_extracted_data.ai_corrections.line_items_merged.length} split line item{invoice.ocr_extracted_data.ai_corrections.line_items_merged.length !== 1 ? 's' : ''}
+                {invoice.ocr_extracted_data.ai_corrections &&
+                  (invoice.ocr_extracted_data.ai_corrections.line_items_merged?.length >
+                    0 ||
+                    Object.keys(
+                      invoice.ocr_extracted_data.ai_corrections.descriptions_fixed ||
+                      {}
+                    ).length > 0) && (
+                    <div className="rounded-lg border border-blue-500/50 bg-blue-500/10 p-3">
+                      <div className="flex items-start gap-2">
+                        <Sparkles className="h-4 w-4 text-blue-500 mt-0.5" />
+                        <div className="space-y-1">
+                          <p className="text-sm font-medium text-blue-500">
+                            AI Enhancements Applied
                           </p>
-                        )}
-                        {Object.keys(invoice.ocr_extracted_data.ai_corrections.descriptions_fixed || {}).length > 0 && (
-                          <p className="text-xs text-muted-foreground">
-                            Fixed {Object.keys(invoice.ocr_extracted_data.ai_corrections.descriptions_fixed).length} description{Object.keys(invoice.ocr_extracted_data.ai_corrections.descriptions_fixed).length !== 1 ? 's' : ''}
-                          </p>
-                        )}
+                          {invoice.ocr_extracted_data.ai_corrections.line_items_merged?.length >
+                            0 && (
+                              <p className="text-xs text-muted-foreground">
+                                Merged{' '}
+                                {
+                                  invoice.ocr_extracted_data.ai_corrections
+                                    .line_items_merged.length
+                                }{' '}
+                                split line item
+                                {
+                                  invoice.ocr_extracted_data.ai_corrections
+                                    .line_items_merged.length !== 1
+                                    ? 's'
+                                    : ''
+                                }
+                              </p>
+                            )}
+                          {Object.keys(
+                            invoice.ocr_extracted_data.ai_corrections.descriptions_fixed ||
+                            {}
+                          ).length > 0 && (
+                              <p className="text-xs text-muted-foreground">
+                                Fixed{' '}
+                                {
+                                  Object.keys(
+                                    invoice.ocr_extracted_data.ai_corrections
+                                      .descriptions_fixed
+                                  ).length
+                                }{' '}
+                                description
+                                {
+                                  Object.keys(
+                                    invoice.ocr_extracted_data.ai_corrections
+                                      .descriptions_fixed
+                                  ).length !== 1
+                                    ? 's'
+                                    : ''
+                                }
+                              </p>
+                            )}
+                        </div>
                       </div>
                     </div>
-                  </div>
-                )}
+                  )}
               </CardContent>
             </Card>
           )}
@@ -408,7 +658,9 @@ export default function InvoiceDetailPage() {
               {invoice.rejection_reason && (
                 <div className="space-y-2">
                   <p className="text-sm font-medium text-red-500">Rejection Reason</p>
-                  <p className="text-sm text-muted-foreground">{invoice.rejection_reason}</p>
+                  <p className="text-sm text-muted-foreground">
+                    {invoice.rejection_reason}
+                  </p>
                 </div>
               )}
             </CardContent>
@@ -419,20 +671,110 @@ export default function InvoiceDetailPage() {
               <CardTitle>Actions</CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
+              {invoice.current_state === 'draft' && (
+                <Button
+                  className="w-full"
+                  onClick={handleSubmitForApproval}
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting && (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  )}
+                  Submit for Approval
+                </Button>
+              )}
+
               {invoice.current_state === 'pending_approval' && (
                 <>
-                  <Button className="w-full" variant="default">Approve</Button>
-                  <Button className="w-full" variant="destructive">Reject</Button>
+                  <Button
+                    className="w-full"
+                    variant="default"
+                    onClick={handleApprove}
+                    disabled={isApproving}
+                  >
+                    {isApproving && (
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    )}
+                    Approve Invoice
+                  </Button>
+                  <Button
+                    className="w-full"
+                    variant="destructive"
+                    onClick={() => setShowRejectDialog(true)}
+                    disabled={isRejecting}
+                  >
+                    Reject Invoice
+                  </Button>
                 </>
               )}
+
               {invoice.current_state === 'approved' && (
-                <Button className="w-full" variant="default">Mark as Paid</Button>
+                <Button
+                  className="w-full"
+                  variant="default"
+                  onClick={handleMarkAsPaid}
+                  disabled={isMarkingPaid}
+                >
+                  {isMarkingPaid && (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  )}
+                  Mark as Paid
+                </Button>
               )}
-              <Button className="w-full" variant="outline">Download PDF</Button>
+
+              <Button className="w-full" variant="outline">
+                Download PDF
+              </Button>
             </CardContent>
           </Card>
         </div>
       </div>
+
+      {/* Reject Dialog */}
+      <Dialog open={showRejectDialog} onOpenChange={setShowRejectDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Reject Invoice</DialogTitle>
+            <DialogDescription>
+              Please provide a reason for rejecting this invoice.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="rejection-reason">Rejection Reason</Label>
+              <Textarea
+                id="rejection-reason"
+                placeholder="Enter reason for rejection..."
+                value={rejectionReason}
+                onChange={(e) => setRejectionReason(e.target.value)}
+                rows={4}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setShowRejectDialog(false);
+                setRejectionReason('');
+              }}
+              disabled={isRejecting}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handleReject}
+              disabled={isRejecting || !rejectionReason.trim()}
+            >
+              {isRejecting && (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              )}
+              Reject Invoice
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

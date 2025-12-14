@@ -39,7 +39,7 @@ type AuthContextType = {
   isLoading: boolean;
 };
 
-const STORAGE_KEY = 'galsi_user_data';
+const STORAGE_KEY = 'sarmaya_user_data';
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 

@@ -7,13 +7,23 @@ import { useToast } from '@/hooks/use-toast';
 import { API_ENDPOINTS } from '@/lib/api-config';
 import { apiFetch } from '@/lib/api-config';
 import type { Invoice, InvoiceStatus, InvoiceFilters } from '@/types/invoice';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, Search, Filter, FileText, Calendar, DollarSign } from 'lucide-react';
+import { Loader2, Search, Filter, FileText, Calendar } from 'lucide-react';
 import { format } from 'date-fns';
+
+import { 
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { MoreVertical, Send as SendIcon, CheckCircle as CheckIcon, XCircle as XIcon, DollarSign as DollarIcon } from 'lucide-react';
 
 const STATUS_COLORS: Record<InvoiceStatus, string> = {
   draft: 'bg-gray-500',
@@ -115,6 +125,50 @@ export default function InvoicesPage() {
       return format(new Date(dateString), 'MMM dd, yyyy');
     } catch {
       return dateString;
+    }
+  };
+
+  const handleQuickAction = async (invoiceId: string, action: 'submit' | 'approve' | 'mark-paid', e: React.MouseEvent) => {
+    e.stopPropagation();
+
+    if (!user?.access_token) return;
+
+    const endpoints = {
+      submit: API_ENDPOINTS.INVOICES.SUBMIT(invoiceId),
+      approve: API_ENDPOINTS.INVOICES.APPROVE(invoiceId),
+      'mark-paid': API_ENDPOINTS.INVOICES.MARK_PAID(invoiceId),
+    };
+
+    const messages = {
+      submit: 'Invoice submitted for approval',
+      approve: 'Invoice approved successfully',
+      'mark-paid': 'Invoice marked as paid',
+    };
+
+    try {
+      const response = await apiFetch(
+        endpoints[action],
+        { method: 'POST' },
+        user.access_token
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || `Failed to ${action} invoice`);
+      }
+
+      toast({
+        title: 'Success',
+        description: messages[action],
+      });
+
+      fetchInvoices();
+    } catch (error: any) {
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: error.message || `Failed to ${action} invoice`,
+      });
     }
   };
 
@@ -241,11 +295,13 @@ export default function InvoicesPage() {
             <Card
               key={invoice.id}
               className="hover:border-primary/50 transition-colors cursor-pointer"
-              onClick={() => router.push(`/ai-tools/invoices/${invoice.id}`)}
             >
               <CardContent className="p-6">
                 <div className="flex items-start justify-between">
-                  <div className="space-y-3 flex-1">
+                  <div 
+                    className="space-y-3 flex-1"
+                    onClick={() => router.push(`/ai-tools/invoices/${invoice.id}`)}
+                  >
                     <div className="flex items-center gap-3">
                       <h3 className="text-lg font-semibold">{invoice.invoice_number}</h3>
                       <Badge className={STATUS_COLORS[invoice.current_state]}>
@@ -275,6 +331,48 @@ export default function InvoicesPage() {
                       Created {formatDate(invoice.created_at)}
                     </p>
                   </div>
+
+                  {/* Quick Actions Dropdown */}
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="icon" onClick={(e) => e.stopPropagation()}>
+                        <MoreVertical className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuLabel>Quick Actions</DropdownMenuLabel>
+                      <DropdownMenuSeparator />
+                      
+                      {invoice.current_state === 'draft' && (
+                        <DropdownMenuItem onClick={(e) => handleQuickAction(invoice.id, 'submit', e)}>
+                          <SendIcon className="mr-2 h-4 w-4" />
+                          Submit for Approval
+                        </DropdownMenuItem>
+                      )}
+
+                      {invoice.current_state === 'pending_approval' && (
+                        <DropdownMenuItem onClick={(e) => handleQuickAction(invoice.id, 'approve', e)}>
+                          <CheckIcon className="mr-2 h-4 w-4" />
+                          Approve
+                        </DropdownMenuItem>
+                      )}
+
+                      {invoice.current_state === 'approved' && (
+                        <DropdownMenuItem onClick={(e) => handleQuickAction(invoice.id, 'mark-paid', e)}>
+                          <DollarIcon className="mr-2 h-4 w-4" />
+                          Mark as Paid
+                        </DropdownMenuItem>
+                      )}
+
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem onClick={(e) => {
+                        e.stopPropagation();
+                        router.push(`/ai-tools/invoices/${invoice.id}`);
+                      }}>
+                        View Details
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </div>
               </CardContent>
             </Card>

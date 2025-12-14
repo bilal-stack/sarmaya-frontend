@@ -98,3 +98,16 @@ export interface InvoiceUploadResponse {
   message?: string;
   existing_invoice_id?: string;
 }
+
+export interface DuplicateCheckRequest {
+  invoice_number: string;
+  vendor_name?: string;
+}
+
+export interface DuplicateCheckResponse {
+  is_duplicate: boolean;
+  existing_invoice_id?: string;
+  existing_invoice_number?: string;
+  similarity_score?: number;
+  message: string;
+}

@@ -9,10 +9,21 @@ export const API_ENDPOINTS = {
     LIST: `${API_BASE_URL}/invoices`,
     DETAIL: (id: string) => `${API_BASE_URL}/invoices/${id}`,
     UPLOAD: `${API_BASE_URL}/invoices/upload`,
+    SUBMIT: (id: string) => `${API_BASE_URL}/invoices/${id}/submit`,
+    APPROVE: (id: string) => `${API_BASE_URL}/invoices/${id}/approve`,
+    REJECT: (id: string) => `${API_BASE_URL}/invoices/${id}/reject`,
+    MARK_PAID: (id: string) => `${API_BASE_URL}/invoices/${id}/mark-paid`,
   },
-  INVESTOR_PITCH_COACH: {
-    LIST: `${API_BASE_URL}/investor-pitch-coach`,
-    ANALYSIS: `${API_BASE_URL}/investor-pitch-coach/analysis`,
+  CHATBOT: {
+    LIST: `${API_BASE_URL}/conversation/list`,
+    MESSAGES: (id: string) => `${API_BASE_URL}/conversation/messages/${id}`,
+    DELETE: (id: string) => `${API_BASE_URL}/conversation/delete/${id}`,
+    CHAT: `${API_BASE_URL}/conversation/chat`,
+    QUERY: `${API_BASE_URL}/conversation/query`,
+    DETECT_DUPLICATE: `${API_BASE_URL}/conversation/detect-duplicate`,
+  },
+  DUPLICATES: {
+    CHECK: `${API_BASE_URL}/invoices/check-duplicate`,
   },
 };
 
@@ -39,7 +50,7 @@ export async function apiFetch(
   // Check for 401 Unauthorized (token expired or invalid)
   if (response.status === 401) {
     // Clear localStorage and redirect to login
-    localStorage.removeItem('sarmaya_user_data');
+    localStorage.removeItem('galsi_user_data');
     window.location.href = '/login';
     throw new Error('Session expired. Please login again.');
   }
@@ -73,7 +84,7 @@ export async function apiUpload(
 
     xhr.onload = () => {
       if (xhr.status === 401) {
-        localStorage.removeItem('galsi_user_data');
+        localStorage.removeItem('sarmaya_user_data');
         window.location.href = '/login';
         reject(new Error('Session expired. Please login again.'));
         return;
