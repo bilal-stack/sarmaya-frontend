@@ -49,8 +49,10 @@ export async function apiFetch(
 
   // Check for 401 Unauthorized (token expired or invalid)
   if (response.status === 401) {
-    // Clear localStorage and redirect to login
-    localStorage.removeItem('galsi_user_data');
+    // Clear localStorage and redirect to login. Must match the key the auth
+    // context stores under (sarmaya_user_data); otherwise the stale session is
+    // never cleared and the app can loop on the expired token.
+    localStorage.removeItem('sarmaya_user_data');
     window.location.href = '/login';
     throw new Error('Session expired. Please login again.');
   }
