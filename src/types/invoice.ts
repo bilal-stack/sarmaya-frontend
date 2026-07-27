@@ -80,6 +80,19 @@ export interface ApiError {
   }>;
 }
 
+/**
+ * Soft duplicate flag returned on upload: an existing invoice from the same
+ * vendor with a similar amount and a nearby date. The upload still succeeds —
+ * approval is blocked until a reviewer overrides it with a logged reason.
+ */
+export interface DuplicateWarning {
+  invoice_id: string;
+  invoice_number: string | null;
+  amount: number | null;
+  date: string | null;
+  message: string;
+}
+
 export interface InvoiceUploadResponse {
   success: boolean;
   invoice_id: string | null;
@@ -92,7 +105,7 @@ export interface InvoiceUploadResponse {
   current_state: InvoiceStatus | null;
   ocr_confidence: number | null;
   ocr_data: OCRExtractedData | null;
-  duplicate_warning: string | null;
+  duplicate_warning: DuplicateWarning | null;
   file_id: string | null;
   error?: string;
   message?: string;

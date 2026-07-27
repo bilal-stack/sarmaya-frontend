@@ -316,15 +316,48 @@ export default function InvoiceUploadPage() {
                   </div>
                 )}
 
-                {/* Duplicate Warning */}
+                {/* Duplicate Warning — soft flag; approval stays blocked until
+                    a reviewer overrides it with a logged reason. */}
                 {uploadedInvoice.duplicate_warning && (
                   <div className="flex items-start gap-2 rounded-lg border border-yellow-500/50 bg-yellow-500/10 p-3">
-                    <AlertTriangle className="h-5 w-5 text-yellow-500 mt-0.5" />
-                    <div>
-                      <p className="text-sm font-medium text-yellow-500">Warning</p>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        {uploadedInvoice.duplicate_warning}
+                    <AlertTriangle className="h-5 w-5 text-yellow-500 mt-0.5 shrink-0" />
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium text-yellow-500">
+                        Potential Duplicate
                       </p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {uploadedInvoice.duplicate_warning.message}
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Matches{' '}
+                        <span className="font-medium text-foreground">
+                          {uploadedInvoice.duplicate_warning.invoice_number ?? 'an existing invoice'}
+                        </span>
+                        {uploadedInvoice.duplicate_warning.amount != null && (
+                          <>
+                            {' · '}
+                            {formatCurrency(
+                              uploadedInvoice.duplicate_warning.amount,
+                              uploadedInvoice.currency || 'PKR'
+                            )}
+                          </>
+                        )}
+                        {uploadedInvoice.duplicate_warning.date && (
+                          <>{' · '}{uploadedInvoice.duplicate_warning.date}</>
+                        )}
+                      </p>
+                      <Button
+                        variant="link"
+                        size="sm"
+                        className="h-auto p-0 text-xs text-yellow-500 hover:text-yellow-600 mt-1"
+                        onClick={() =>
+                          router.push(
+                            `/ai-tools/invoices/${uploadedInvoice.duplicate_warning!.invoice_id}`
+                          )
+                        }
+                      >
+                        View matched invoice →
+                      </Button>
                     </div>
                   </div>
                 )}
