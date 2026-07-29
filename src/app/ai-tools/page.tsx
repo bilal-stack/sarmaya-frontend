@@ -11,7 +11,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { FileText, Upload, Bot, MessageSquare, ScanSearch, ArrowRight, Loader2, Inbox } from 'lucide-react';
+import { FileText, Upload, Bot, MessageSquare, ScanSearch, ArrowRight, Loader2, Inbox, Building2, Bot as BotIcon } from 'lucide-react';
 import Link from 'next/link';
 
 const tools = [
@@ -20,6 +20,12 @@ const tools = [
     description: 'Everything waiting on you, reduced to its single most blocking next step — with SLA timers and one-click escalation.',
     icon: <Inbox className="h-8 w-8 text-primary" />,
     link: '/ai-tools/inbox',
+  },
+  {
+    name: 'Vendor Review',
+    description: 'Verify vendors that are blocking invoice approvals, ordered by the value each is holding up.',
+    icon: <Building2 className="h-8 w-8 text-primary" />,
+    link: '/ai-tools/vendors',
   },
   {
     name: 'Invoices',
@@ -38,6 +44,12 @@ const tools = [
     description: 'Automatically identify and flag duplicate invoices across your system to prevent errors.',
     icon: <ScanSearch className="h-8 w-8 text-primary" />,
     link: '/ai-tools/detect-duplicate',
+  },
+  {
+    name: 'Autopilot',
+    description: 'Opt-in auto-approval for low-risk invoices, with a dry run that shows exactly what would be approved and why.',
+    icon: <BotIcon className="h-8 w-8 text-primary" />,
+    link: '/ai-tools/autopilot',
   },
   {
     name: 'AI Chatbot',
