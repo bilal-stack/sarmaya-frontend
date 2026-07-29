@@ -11,7 +11,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { FileText, Upload, Bot, MessageSquare, ScanSearch, ArrowRight, Loader2, Inbox, Building2, Bot as BotIcon } from 'lucide-react';
+import { FileText, Upload, Bot, MessageSquare, ScanSearch, ArrowRight, Loader2, Inbox, Building2, Bot as BotIcon, Scale } from 'lucide-react';
 import Link from 'next/link';
 
 const tools = [
@@ -50,6 +50,12 @@ const tools = [
     description: 'Opt-in auto-approval for low-risk invoices, with a dry run that shows exactly what would be approved and why.',
     icon: <BotIcon className="h-8 w-8 text-primary" />,
     link: '/ai-tools/autopilot',
+  },
+  {
+    name: 'Approval Matrix',
+    description: 'The rules deciding who must approve an invoice, plus a simulator to test a threshold change against past invoices before it goes live.',
+    icon: <Scale className="h-8 w-8 text-primary" />,
+    link: '/ai-tools/policies',
   },
   {
     name: 'AI Chatbot',
