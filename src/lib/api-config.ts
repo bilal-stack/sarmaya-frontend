@@ -62,6 +62,10 @@ export const API_ENDPOINTS = {
     RUN: `${API_BASE_URL}/autopilot/run`,
     REVERT: (id: string) => `${API_BASE_URL}/autopilot/${id}/revert`,
   },
+  USERS: {
+    // Directory for the delegate picker; requires users.view.
+    LIST: `${API_BASE_URL}/users`,
+  },
   DELEGATIONS: {
     LIST: `${API_BASE_URL}/delegations`,
     CREATE: `${API_BASE_URL}/delegations`,

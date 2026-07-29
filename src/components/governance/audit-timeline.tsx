@@ -8,6 +8,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/context/auth-context';
 import { API_ENDPOINTS, apiFetch } from '@/lib/api-config';
+import { parseApiDate } from '@/lib/datetime';
 import type { AuditTimeline, AuditChainVerification } from '@/types/governance';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -161,7 +162,7 @@ export function AuditTimelineView({ objectType = 'invoice', objectId }: Props) {
                     )}
                   </div>
                   <p className="text-xs text-muted-foreground mt-1">
-                    {format(new Date(event.timestamp), 'dd MMM yyyy, HH:mm')}
+                    {format(parseApiDate(event.timestamp), 'dd MMM yyyy, HH:mm')}
                     {event.actor && ` · ${event.actor}`}
                     {event.actor_role && ` (${event.actor_role})`}
                   </p>

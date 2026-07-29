@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/auth-context';
 import { useToast } from '@/hooks/use-toast';
 import { API_ENDPOINTS, apiFetch } from '@/lib/api-config';
+import { parseApiDate } from '@/lib/datetime';
 import type { DecisionInbox, DecisionInboxItem, EscalationResult } from '@/types/governance';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -282,7 +283,7 @@ function InboxCard({
 
           {item.sla_due_at && !item.overdue && (
             <span className="text-xs text-muted-foreground">
-              due {formatDistanceToNow(new Date(item.sla_due_at), { addSuffix: true })}
+              due {formatDistanceToNow(parseApiDate(item.sla_due_at), { addSuffix: true })}
             </span>
           )}
         </div>
