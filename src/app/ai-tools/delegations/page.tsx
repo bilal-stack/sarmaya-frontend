@@ -14,7 +14,7 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/auth-context';
 import { useToast } from '@/hooks/use-toast';
 import { API_ENDPOINTS, apiFetch } from '@/lib/api-config';
-import { parseApiDate } from '@/lib/datetime';
+import { parseApiDate, toDateTimeLocalValue } from '@/lib/datetime';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -47,10 +47,11 @@ interface DirectoryUser {
   role: string;
 }
 
-/** Default window: from now to a week today — the common "I'm on leave" case. */
-const defaultStart = () => new Date().toISOString().slice(0, 16);
+/** Default window: from now to a week today — the common "I'm on leave" case.
+ *  Formatted as local wall clock, which is what a datetime-local input reads. */
+const defaultStart = () => toDateTimeLocalValue(new Date());
 const defaultEnd = () =>
-  new Date(Date.now() + 7 * 24 * 3600 * 1000).toISOString().slice(0, 16);
+  toDateTimeLocalValue(new Date(Date.now() + 7 * 24 * 3600 * 1000));
 
 export default function DelegationsPage() {
   const router = useRouter();

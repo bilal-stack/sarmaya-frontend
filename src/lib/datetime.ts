@@ -21,3 +21,16 @@ export function parseApiDate(value: string | Date): Date {
   const needsUtc = raw.includes('T') && !HAS_OFFSET.test(raw);
   return new Date(needsUtc ? `${raw}Z` : raw);
 }
+
+/**
+ * Format a Date for an `<input type="datetime-local">`.
+ *
+ * The input reads and writes *local* wall-clock time, so the obvious
+ * `toISOString().slice(0, 16)` is wrong: it produces UTC, which the input then
+ * interprets as local and shifts by the viewer's offset. Prefilling "now" that
+ * way gives a window starting hours from where the user thinks it does.
+ */
+export function toDateTimeLocalValue(date: Date): string {
+  const localMs = date.getTime() - date.getTimezoneOffset() * 60_000;
+  return new Date(localMs).toISOString().slice(0, 16);
+}
