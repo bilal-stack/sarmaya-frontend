@@ -11,7 +11,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { FileText, Upload, Bot, MessageSquare, ScanSearch, ArrowRight, Loader2, Inbox, Building2, Bot as BotIcon, Scale, UserCheck } from 'lucide-react';
+import { FileText, Upload, Bot, MessageSquare, ScanSearch, ArrowRight, Loader2, Inbox, Building2, Bot as BotIcon, Scale, UserCheck, ShieldCheck } from 'lucide-react';
 import Link from 'next/link';
 
 const tools = [
@@ -62,6 +62,12 @@ const tools = [
     description: 'Lend your approval authority for a fixed window while you are away. Segregation of duties still applies, and both parties are named in the audit trail.',
     icon: <UserCheck className="h-8 w-8 text-primary" />,
     link: '/ai-tools/delegations',
+  },
+  {
+    name: 'Audit Console',
+    description: 'Every AI action with the model and prompt behind it, and sealed evidence packs bundling a whole transaction chain under one hash.',
+    icon: <ShieldCheck className="h-8 w-8 text-primary" />,
+    link: '/ai-tools/audit',
   },
   {
     name: 'AI Chatbot',

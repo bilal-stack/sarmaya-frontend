@@ -14,6 +14,7 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/auth-context';
 import { useToast } from '@/hooks/use-toast';
 import { API_ENDPOINTS, apiFetch } from '@/lib/api-config';
+import { ConfigHistory } from '@/components/governance/config-history';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -319,6 +320,13 @@ export default function AutopilotPage() {
           )}
         </CardContent>
       </Card>
+
+      <ConfigHistory
+        configType="autopilot"
+        configKey="autopilot"
+        label="autopilot bounds"
+        onRestored={load}
+      />
     </div>
   );
 }

@@ -41,7 +41,9 @@ export const API_ENDPOINTS = {
     AI_ACTIONS: `${API_BASE_URL}/audit/ai-actions`,
     POLICY_EVALS: `${API_BASE_URL}/audit/policy-evals`,
     CHAIN: (correlationId: string) => `${API_BASE_URL}/audit/chain/${correlationId}`,
+    // GET previews the bundle without recording it; POST seals and records it.
     EVIDENCE_PACK: (correlationId: string) => `${API_BASE_URL}/audit/evidence-pack/${correlationId}`,
+    EVIDENCE_PACKS: `${API_BASE_URL}/audit/evidence-packs`,
   },
   VENDORS: {
     LIST: `${API_BASE_URL}/vendors`,
