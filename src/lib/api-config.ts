@@ -25,6 +25,48 @@ export const API_ENDPOINTS = {
   DUPLICATES: {
     CHECK: `${API_BASE_URL}/invoices/check-duplicate`,
   },
+
+  // --- Governance surfaces (post-MVP) ---------------------------------------
+  INBOX: {
+    LIST: `${API_BASE_URL}/inbox`,
+    ESCALATE_OVERDUE: `${API_BASE_URL}/inbox/escalate-overdue`,
+  },
+  AGENT: {
+    // Suggestion-only: never auto-execute the returned action.
+    NEXT_ACTION: (id: string) => `${API_BASE_URL}/invoices/${id}/next-action`,
+  },
+  AUDIT: {
+    TIMELINE: (type: string, id: string) => `${API_BASE_URL}/audit/timeline/${type}/${id}`,
+    VERIFY: (type: string, id: string) => `${API_BASE_URL}/audit/verify/${type}/${id}`,
+    AI_ACTIONS: `${API_BASE_URL}/audit/ai-actions`,
+    POLICY_EVALS: `${API_BASE_URL}/audit/policy-evals`,
+    CHAIN: (correlationId: string) => `${API_BASE_URL}/audit/chain/${correlationId}`,
+    EVIDENCE_PACK: (correlationId: string) => `${API_BASE_URL}/audit/evidence-pack/${correlationId}`,
+  },
+  VENDORS: {
+    LIST: `${API_BASE_URL}/vendors`,
+    REVIEW_QUEUE: `${API_BASE_URL}/vendors/review-queue`,
+    SET_STATUS: (id: string) => `${API_BASE_URL}/vendors/${id}/status`,
+  },
+  CONFIG: {
+    APPROVAL_POLICIES: `${API_BASE_URL}/config/approval-policies`,
+    SIMULATE: `${API_BASE_URL}/config/approval-policies/simulate`,
+    WORKFLOW_STATES: (type: string) => `${API_BASE_URL}/config/workflow/${type}/states`,
+    AUTOPILOT: `${API_BASE_URL}/config/autopilot`,
+    VERSIONS: (type: string, key: string) => `${API_BASE_URL}/config/versions/${type}/${key}`,
+    RESTORE: (type: string, key: string, version: number) =>
+      `${API_BASE_URL}/config/versions/${type}/${key}/${version}/restore`,
+  },
+  AUTOPILOT: {
+    PREVIEW: `${API_BASE_URL}/autopilot/preview`,
+    RUN: `${API_BASE_URL}/autopilot/run`,
+    REVERT: (id: string) => `${API_BASE_URL}/autopilot/${id}/revert`,
+  },
+  DELEGATIONS: {
+    LIST: `${API_BASE_URL}/delegations`,
+    CREATE: `${API_BASE_URL}/delegations`,
+    REVOKE: (id: string) => `${API_BASE_URL}/delegations/${id}/revoke`,
+  },
 };
 
 // API fetch wrapper with token expiration handling

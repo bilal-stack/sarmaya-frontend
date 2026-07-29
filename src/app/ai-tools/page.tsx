@@ -11,10 +11,16 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { FileText, Upload, Bot, MessageSquare, ScanSearch, ArrowRight, Loader2 } from 'lucide-react';
+import { FileText, Upload, Bot, MessageSquare, ScanSearch, ArrowRight, Loader2, Inbox } from 'lucide-react';
 import Link from 'next/link';
 
 const tools = [
+  {
+    name: 'Decision Inbox',
+    description: 'Everything waiting on you, reduced to its single most blocking next step — with SLA timers and one-click escalation.',
+    icon: <Inbox className="h-8 w-8 text-primary" />,
+    link: '/ai-tools/inbox',
+  },
   {
     name: 'Invoices',
     description: 'View and manage all your invoices. Submit, approve, reject, or mark as paid directly from invoice details.',

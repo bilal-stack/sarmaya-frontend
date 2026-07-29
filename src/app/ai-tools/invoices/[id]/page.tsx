@@ -6,6 +6,9 @@ import { useAuth } from '@/context/auth-context';
 import { useToast } from '@/hooks/use-toast';
 import { apiFetch, API_ENDPOINTS } from '@/lib/api-config';
 import type { InvoiceDetail, ApiError } from '@/types/invoice';
+import type { NextAction } from '@/types/governance';
+import { NextActionCard } from '@/components/governance/next-action-card';
+import { AuditTimelineView } from '@/components/governance/audit-timeline';
 import {
   Card,
   CardContent,
@@ -158,6 +161,32 @@ export default function InvoiceDetailPage() {
       return format(new Date(dateString), 'MMM dd, yyyy');
     } catch {
       return dateString;
+    }
+  };
+
+  /**
+   * Route a suggestion to the handler that already owns that transition.
+   * Suggestions never bypass the normal path: anything needing extra input
+   * (a duplicate override reason, vendor verification, field edits) navigates
+   * rather than firing a mutation blind.
+   */
+  const handleSuggestedAction = (action: NextAction) => {
+    switch (action) {
+      case 'submit_for_approval':
+        return handleSubmitForApproval();
+      case 'approve':
+        return handleApprove();
+      case 'mark_paid':
+        return handleMarkAsPaid();
+      case 'verify_vendor':
+        return router.push('/ai-tools/vendors');
+      case 'review_extraction':
+      case 'fix_missing_fields':
+      case 'revise':
+      case 'resolve_duplicate':
+      default:
+        // Needs human input or a screen we don't own here.
+        return;
     }
   };
 
@@ -620,10 +649,21 @@ export default function InvoiceDetailPage() {
               </CardContent>
             </Card>
           )}
+
+          {/* Live Audit Mode: full history, policy reason, tamper-evidence. */}
+          <AuditTimelineView objectType="invoice" objectId={invoice.id} />
         </div>
 
         {/* Sidebar */}
         <div className="space-y-6">
+          {/* Suggestion only — the card emits an action, the handlers below
+              perform it, so every mutation still goes through one path. */}
+          <NextActionCard
+            invoiceId={invoice.id}
+            isBusy={isSubmitting || isApproving || isMarkingPaid}
+            onAction={handleSuggestedAction}
+          />
+
           <Card>
             <CardHeader>
               <CardTitle>Metadata</CardTitle>
