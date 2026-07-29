@@ -67,6 +67,12 @@ export interface InvoiceDetail extends Invoice {
   created_by: string;
   updated_at: string;
   line_items?: LineItem[];
+  /**
+   * The transaction chain this invoice belongs to, used to open its evidence
+   * pack in the audit console. Null for invoices created before correlation
+   * IDs were introduced.
+   */
+  correlation_id: string | null;
 }
 
 export interface ApiError {

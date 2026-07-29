@@ -7,6 +7,7 @@ import { useToast } from '@/hooks/use-toast';
 import { apiFetch, API_ENDPOINTS } from '@/lib/api-config';
 import type { InvoiceDetail, ApiError } from '@/types/invoice';
 import type { NextAction } from '@/types/governance';
+import Link from 'next/link';
 import { NextActionCard } from '@/components/governance/next-action-card';
 import { AuditTimelineView } from '@/components/governance/audit-timeline';
 import {
@@ -652,6 +653,27 @@ export default function InvoiceDetailPage() {
 
           {/* Live Audit Mode: full history, policy reason, tamper-evidence. */}
           <AuditTimelineView objectType="invoice" objectId={invoice.id} />
+
+          {/* The way into the audit console for this invoice. Without this the
+              evidence pack is only reachable by reading a UUID out of the
+              database, which makes the feature effectively invisible. */}
+          {invoice.correlation_id && (
+            <Card>
+              <CardContent className="flex flex-wrap items-center justify-between gap-3 py-4">
+                <div className="min-w-0">
+                  <p className="text-sm font-medium">Transaction chain</p>
+                  <p className="text-xs text-muted-foreground font-mono break-all mt-0.5">
+                    {invoice.correlation_id}
+                  </p>
+                </div>
+                <Button asChild variant="outline" size="sm">
+                  <Link href={`/ai-tools/audit?correlation_id=${invoice.correlation_id}`}>
+                    Evidence pack
+                  </Link>
+                </Button>
+              </CardContent>
+            </Card>
+          )}
         </div>
 
         {/* Sidebar */}

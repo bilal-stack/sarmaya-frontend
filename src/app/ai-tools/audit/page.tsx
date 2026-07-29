@@ -10,8 +10,8 @@
  * as a successful one, because those are the rows that matter in a review.
  */
 
-import { useState, useEffect, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect, useCallback, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/context/auth-context';
 import { useToast } from '@/hooks/use-toast';
 import { API_ENDPOINTS, apiFetch } from '@/lib/api-config';
@@ -85,8 +85,9 @@ const statusLabel = (status: string) =>
     ? 'rejected: bad output'
     : status.replace(/_/g, ' ');
 
-export default function AuditPage() {
+function AuditConsole() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { user, isLoading: authLoading } = useAuth();
   const { toast } = useToast();
 
@@ -95,7 +96,11 @@ export default function AuditPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [denied, setDenied] = useState(false);
 
-  const [correlationId, setCorrelationId] = useState('');
+  // Arriving from an invoice's "Evidence pack" link lands here with the chain
+  // already chosen, so the auditor never has to copy a UUID by hand.
+  const [correlationId, setCorrelationId] = useState(
+    () => searchParams.get('correlation_id') ?? ''
+  );
   const [preview, setPreview] = useState<EvidencePack | null>(null);
   const [isPreviewing, setIsPreviewing] = useState(false);
   const [isSealing, setIsSealing] = useState(false);
@@ -218,7 +223,7 @@ export default function AuditPage() {
         </p>
       </div>
 
-      <Tabs defaultValue="ai-actions">
+      <Tabs defaultValue={correlationId ? 'evidence' : 'ai-actions'}>
         <TabsList>
           <TabsTrigger value="ai-actions" className="gap-1.5">
             <Bot className="h-4 w-4" />
@@ -458,5 +463,23 @@ export default function AuditPage() {
         </TabsContent>
       </Tabs>
     </div>
+  );
+}
+
+/**
+ * useSearchParams needs a Suspense boundary, otherwise the whole route bails
+ * out of static rendering at build time.
+ */
+export default function AuditPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex items-center justify-center h-[calc(100vh-200px)]">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      }
+    >
+      <AuditConsole />
+    </Suspense>
   );
 }
