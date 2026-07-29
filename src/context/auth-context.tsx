@@ -35,6 +35,15 @@ type UserData = {
 type AuthContextType = {
   user: UserData | null;
   login: (userData: UserData) => void;
+  /**
+   * Patch the stored session in place, without navigating.
+   *
+   * Needed because `login` always redirects to the dashboard: changing your
+   * password mints a fresh token (the old one is deliberately revoked), and
+   * that token has to replace the stored one silently or the user is bounced
+   * to the login screen straight after succeeding.
+   */
+  updateUser: (patch: Partial<UserData>) => void;
   logout: () => void;
   isLoading: boolean;
 };
@@ -122,6 +131,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [router],
   );
 
+  const updateUser = useCallback((patch: Partial<UserData>) => {
+    setUser((previous) => {
+      if (!previous) return previous;
+      const next = { ...previous, ...patch };
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+      return next;
+    });
+  }, []);
+
   const logout = useCallback(() => {
     setUser(null);
     localStorage.removeItem(STORAGE_KEY);
@@ -132,10 +150,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     () => ({
       user,
       login,
+      updateUser,
       logout,
       isLoading,
     }),
-    [user, login, logout, isLoading],
+    [user, login, updateUser, logout, isLoading],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

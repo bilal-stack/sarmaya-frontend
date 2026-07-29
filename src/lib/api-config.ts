@@ -4,6 +4,9 @@ export const API_ENDPOINTS = {
   AUTH: {
     LOGIN: `${API_BASE_URL}/auth/login`,
     REGISTER: `${API_BASE_URL}/auth/register`,
+    ME: `${API_BASE_URL}/auth/me`,
+    // Credentials go in the body, never the query string.
+    CHANGE_PASSWORD: `${API_BASE_URL}/auth/change-password`,
   },
   INVOICES: {
     LIST: `${API_BASE_URL}/invoices`,
@@ -67,6 +70,8 @@ export const API_ENDPOINTS = {
   USERS: {
     // Directory for the delegate picker; requires users.view.
     LIST: `${API_BASE_URL}/users`,
+    // Role changes require users.manage and are never self-service.
+    SET_ROLE: (id: string) => `${API_BASE_URL}/users/${id}/role`,
   },
   DELEGATIONS: {
     LIST: `${API_BASE_URL}/delegations`,
