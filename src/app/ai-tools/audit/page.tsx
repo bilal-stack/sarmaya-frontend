@@ -1,9 +1,9 @@
 'use client';
 
 /**
- * Audit console — the AI action log and evidence packs.
+ * Audit console — the AI action log, policy decisions and evidence packs.
  *
- * These are the two surfaces an auditor actually asks for, and both are
+ * These are the surfaces an auditor actually asks for, and all are
  * restricted to auditors and admins. The page is deliberately read-only apart
  * from sealing a pack, and it never hides a failure: an AI call that returned
  * malformed output or escalated to a human is shown with the same prominence
@@ -25,7 +25,7 @@ import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Loader2, ShieldCheck, Bot, FileArchive, AlertTriangle, CheckCircle2,
-  UserCog, Lock, Search, PackagePlus,
+  UserCog, Lock, Search, PackagePlus, Scale,
 } from 'lucide-react';
 import { format } from 'date-fns';
 
@@ -53,6 +53,21 @@ interface EvidencePack {
   all_chains_verified: boolean;
   pack_hash: string;
   content: Record<string, any>;
+}
+
+interface PolicyEval {
+  id: string;
+  policy_key: string;
+  policy_id: string | null;
+  policy_name: string | null;
+  policy_version: number | null;
+  inputs: Record<string, any>;
+  output: Record<string, any>;
+  reasons: string[];
+  object_type: string | null;
+  object_id: string | null;
+  evaluated_by: string | null;
+  created_at: string;
 }
 
 interface PackRecord {
@@ -93,6 +108,7 @@ function AuditConsole() {
 
   const [actions, setActions] = useState<AIAction[]>([]);
   const [packs, setPacks] = useState<PackRecord[]>([]);
+  const [evals, setEvals] = useState<PolicyEval[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [denied, setDenied] = useState(false);
 
@@ -113,9 +129,10 @@ function AuditConsole() {
     }
     setIsLoading(true);
     try {
-      const [actionsRes, packsRes] = await Promise.all([
+      const [actionsRes, packsRes, evalsRes] = await Promise.all([
         apiFetch(`${API_ENDPOINTS.AUDIT.AI_ACTIONS}?limit=100`, {}, user.access_token),
         apiFetch(API_ENDPOINTS.AUDIT.EVIDENCE_PACKS, {}, user.access_token),
+        apiFetch(`${API_ENDPOINTS.AUDIT.POLICY_EVALS}?limit=100`, {}, user.access_token),
       ]);
       // Both are auditor/admin-only; a 403 is a legitimate answer, not an error.
       if (actionsRes.status === 403) {
@@ -124,6 +141,7 @@ function AuditConsole() {
       }
       if (actionsRes.ok) setActions(await actionsRes.json());
       if (packsRes.ok) setPacks(await packsRes.json());
+      if (evalsRes.ok) setEvals(await evalsRes.json());
     } finally {
       setIsLoading(false);
     }
@@ -219,7 +237,8 @@ function AuditConsole() {
           Audit console
         </h1>
         <p className="text-muted-foreground mt-1">
-          What the AI did, and sealed evidence for any transaction chain.
+          What the AI did, which rule decided each routing, and sealed evidence for any
+          transaction chain.
         </p>
       </div>
 
@@ -228,6 +247,10 @@ function AuditConsole() {
           <TabsTrigger value="ai-actions" className="gap-1.5">
             <Bot className="h-4 w-4" />
             AI actions
+          </TabsTrigger>
+          <TabsTrigger value="policy" className="gap-1.5">
+            <Scale className="h-4 w-4" />
+            Policy decisions
           </TabsTrigger>
           <TabsTrigger value="evidence" className="gap-1.5">
             <FileArchive className="h-4 w-4" />
@@ -303,6 +326,73 @@ function AuditConsole() {
                     </div>
                   );
                 })
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* ---------------- Policy decisions ---------------- */}
+        <TabsContent value="policy" className="mt-4">
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Policy decisions</CardTitle>
+              <CardDescription>
+                Each routing decision as it was made — the rule that matched, the version of
+                that rule, and the amount it was applied to. Recorded at decision time, so a
+                past decision stays explainable after the matrix is edited or rolled back.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              {evals.length === 0 ? (
+                <p className="text-sm text-muted-foreground py-2">
+                  No decisions recorded yet. Submitting or approving an invoice records one.
+                </p>
+              ) : (
+                evals.map((e) => (
+                  <div key={e.id} className="rounded-md border p-3">
+                    <div className="flex flex-wrap items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="text-sm font-medium">
+                            {e.policy_name ?? 'Built-in default'}
+                          </span>
+                          {e.policy_version != null ? (
+                            <Badge variant="outline" className="text-xs">
+                              version {e.policy_version}
+                            </Badge>
+                          ) : (
+                            // Null means no configured rule matched, so the
+                            // hardcoded fallback applied — worth showing plainly.
+                            <Badge variant="outline" className="text-xs">
+                              unversioned
+                            </Badge>
+                          )}
+                          {e.output?.required_role && (
+                            <Badge
+                              variant="outline"
+                              className="text-xs border-primary/40 bg-primary/10 text-primary"
+                            >
+                              → {String(e.output.required_role).toUpperCase()}
+                            </Badge>
+                          )}
+                        </div>
+                        {e.reasons?.length > 0 && (
+                          <p className="text-xs text-muted-foreground mt-1">{e.reasons[0]}</p>
+                        )}
+                      </div>
+                      <span className="text-xs text-muted-foreground shrink-0">
+                        {format(parseApiDate(e.created_at), 'dd MMM, HH:mm')}
+                      </span>
+                    </div>
+
+                    <div className="flex flex-wrap gap-x-3 gap-y-1 mt-2 text-xs text-muted-foreground">
+                      {e.inputs?.amount != null && (
+                        <span>amount {Number(e.inputs.amount).toLocaleString()}</span>
+                      )}
+                      {e.object_type && <span>{e.object_type}</span>}
+                    </div>
+                  </div>
+                ))
               )}
             </CardContent>
           </Card>
