@@ -10,7 +10,7 @@ import {
   SidebarGroupLabel,
   SidebarHeader,
 } from '@/components/ui/sidebar';
-import { useAiChatbot } from '@/app/ai-tools/ai-chatbot/layout';
+import { useAiChatbot } from '@/app/ai-tools/ai-chatbot/context';
 import { AiChatbotConversationList } from '@/components/ai-chatbot-conversation-list';
 
 export function AiChatbotSidebar() {

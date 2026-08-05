@@ -53,7 +53,11 @@ const STORAGE_KEY = 'sarmaya_user_data';
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 // Helper function to check if token is expired
-const isTokenExpired = (expiresIn?: number, lastLoginTime?: string): boolean => {
+const isTokenExpired = (
+  expiresIn?: number,
+  // last_login_at is nullable on UserData, so accept null as well as absent.
+  lastLoginTime?: string | null,
+): boolean => {
   if (!expiresIn || !lastLoginTime) return false;
 
   const loginTimestamp = new Date(lastLoginTime).getTime();

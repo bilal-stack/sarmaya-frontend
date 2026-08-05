@@ -7,7 +7,7 @@ import { useToast } from '@/hooks/use-toast';
 import { SidebarMenu, SidebarMenuItem, SidebarMenuButton } from '@/components/ui/sidebar';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Loader2 } from 'lucide-react';
-import { useBusinessConceptAssessor } from '@/app/ai-tools/business-concept-assessor/layout';
+import { useBusinessConceptAssessor } from '@/app/ai-tools/business-concept-assessor/context';
 
 export type ChatRoom = {
     id: string;

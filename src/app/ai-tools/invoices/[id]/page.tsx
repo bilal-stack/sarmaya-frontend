@@ -588,14 +588,18 @@ export default function InvoiceDetailPage() {
                   </div>
                 </div>
 
-                {/* AI Corrections Info */}
-                {invoice.ocr_extracted_data.ai_corrections &&
-                  (invoice.ocr_extracted_data.ai_corrections.line_items_merged?.length >
-                    0 ||
-                    Object.keys(
-                      invoice.ocr_extracted_data.ai_corrections.descriptions_fixed ||
-                      {}
-                    ).length > 0) && (
+                {/* AI Corrections Info. Both fields are optional on the OCR
+                    payload, so the counts are resolved once here rather than
+                    re-reading a possibly-absent array inside the markup. */}
+                {(() => {
+                  const corrections = invoice.ocr_extracted_data.ai_corrections;
+                  const mergedCount = corrections?.line_items_merged?.length ?? 0;
+                  const fixedCount = Object.keys(
+                    corrections?.descriptions_fixed ?? {}
+                  ).length;
+                  if (mergedCount === 0 && fixedCount === 0) return null;
+
+                  return (
                     <div className="rounded-lg border border-blue-500/50 bg-blue-500/10 p-3">
                       <div className="flex items-start gap-2">
                         <Sparkles className="h-4 w-4 text-blue-500 mt-0.5" />
@@ -603,50 +607,23 @@ export default function InvoiceDetailPage() {
                           <p className="text-sm font-medium text-blue-500">
                             AI Enhancements Applied
                           </p>
-                          {invoice.ocr_extracted_data.ai_corrections.line_items_merged?.length >
-                            0 && (
-                              <p className="text-xs text-muted-foreground">
-                                Merged{' '}
-                                {
-                                  invoice.ocr_extracted_data.ai_corrections
-                                    .line_items_merged.length
-                                }{' '}
-                                split line item
-                                {
-                                  invoice.ocr_extracted_data.ai_corrections
-                                    .line_items_merged.length !== 1
-                                    ? 's'
-                                    : ''
-                                }
-                              </p>
-                            )}
-                          {Object.keys(
-                            invoice.ocr_extracted_data.ai_corrections.descriptions_fixed ||
-                            {}
-                          ).length > 0 && (
-                              <p className="text-xs text-muted-foreground">
-                                Fixed{' '}
-                                {
-                                  Object.keys(
-                                    invoice.ocr_extracted_data.ai_corrections
-                                      .descriptions_fixed
-                                  ).length
-                                }{' '}
-                                description
-                                {
-                                  Object.keys(
-                                    invoice.ocr_extracted_data.ai_corrections
-                                      .descriptions_fixed
-                                  ).length !== 1
-                                    ? 's'
-                                    : ''
-                                }
-                              </p>
-                            )}
+                          {mergedCount > 0 && (
+                            <p className="text-xs text-muted-foreground">
+                              Merged {mergedCount} split line item
+                              {mergedCount !== 1 ? 's' : ''}
+                            </p>
+                          )}
+                          {fixedCount > 0 && (
+                            <p className="text-xs text-muted-foreground">
+                              Fixed {fixedCount} description
+                              {fixedCount !== 1 ? 's' : ''}
+                            </p>
+                          )}
                         </div>
                       </div>
                     </div>
-                  )}
+                  );
+                })()}
               </CardContent>
             </Card>
           )}

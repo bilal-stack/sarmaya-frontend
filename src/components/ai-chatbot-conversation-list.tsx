@@ -7,7 +7,7 @@ import { apiFetch, API_ENDPOINTS } from '@/lib/api-config';
 import type { Conversation } from '@/types/chatbot';
 import { SidebarMenu, SidebarMenuItem, SidebarMenuButton } from '@/components/ui/sidebar';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useAiChatbot } from '@/app/ai-tools/ai-chatbot/layout';
+import { useAiChatbot } from '@/app/ai-tools/ai-chatbot/context';
 import { Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 

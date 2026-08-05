@@ -7,7 +7,7 @@ import { useToast } from '@/hooks/use-toast';
 import { SidebarMenu, SidebarMenuItem, SidebarMenuButton } from '@/components/ui/sidebar';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Loader2 } from 'lucide-react';
-import { useDeepResearchChatbot } from '@/app/ai-tools/deep-research-chatbot/layout';
+import { useDeepResearchChatbot } from '@/app/ai-tools/deep-research-chatbot/context';
 
 type ChatRoom = {
     id: string;

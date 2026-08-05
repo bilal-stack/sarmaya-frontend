@@ -8,7 +8,7 @@ import { SidebarMenu, SidebarMenuItem, SidebarMenuButton } from '@/components/ui
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
 import { Circle, CheckCircle, XCircle, Loader2, AlertCircle } from 'lucide-react';
-import { usePitchDeckAdvisor } from '@/app/ai-tools/pitch-deck-advisor/layout';
+import { usePitchDeckAdvisor } from '@/app/ai-tools/pitch-deck-advisor/context';
 
 type PitchDeck = {
     id: string;

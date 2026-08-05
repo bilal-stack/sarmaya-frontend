@@ -19,7 +19,7 @@ import { DeepResearchToolCard } from '@/components/deep-research-tool-card';
 import { parseToolContent, type ToolAction, type SearchResultsData } from '@/components/research-tool-card';
 import { useAuth } from '@/context/auth-context';
 import { useToast } from '@/hooks/use-toast';
-import { useDeepResearchChatbot } from './layout';
+import { useDeepResearchChatbot } from './context';
 
 type ChatMessage = {
     id?: string;
@@ -996,11 +996,14 @@ export default function DeepResearchChatbotPage() {
                 )
             );
         } else {
-            currentToolStepId = `tool-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+            const newToolStepId = `tool-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+            currentToolStepId = newToolStepId;
             setSteps(prev => [
                 ...prev,
                 {
-                    id: currentToolStepId,
+                    // Local const, so its type is string rather than the
+                    // outer variable's string | null, which Step.id rejects.
+                    id: newToolStepId,
                     type: 'tool',
                     title,
                     tool: toolData,
@@ -1094,7 +1097,7 @@ export default function DeepResearchChatbotPage() {
             actionDetails.push(payload.action_detail);
         }
         if (Array.isArray(payload.action_details)) {
-            payload.action_details.forEach((detail) => {
+            payload.action_details.forEach((detail: unknown) => {
                 if (detail && typeof detail === 'object') {
                     actionDetails.push(detail);
                 }

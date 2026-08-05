@@ -34,6 +34,21 @@ export type ParsedStreamData = {
     calloutType?: string;
     diagramType?: string;
     parts?: ParsedContentPart[];
+
+    // Tool / search payload fields. The parser spreads the server's JSON
+    // straight into the emitted object (`onParse({ ...jsonData, type })`), so
+    // these arrive at runtime for tool and search_results events. They are
+    // declared here because consumers read them; without that the readers
+    // failed to compile and the production build could not run.
+    action_detail?: string;
+    action_details?: unknown;
+    tool_name?: string;
+    tool_input?: unknown;
+    query?: string;
+    search_engine?: string;
+    total_results?: number;
+    results?: WebSearchResult[];
+    featured_snippet?: unknown;
 };
  
 export class StreamParser {

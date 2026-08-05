@@ -11,7 +11,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Send, Loader2, Bot, MessageSquare } from 'lucide-react';
-import { useAiChatbot } from './layout';
+import { useAiChatbot } from './context';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 

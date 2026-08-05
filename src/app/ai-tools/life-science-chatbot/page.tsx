@@ -11,7 +11,7 @@ import { Send, Paperclip, Loader2, File as FileIcon, X, Bot, Info, TriangleAlert
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useAuth } from '@/context/auth-context';
 import { useToast } from '@/hooks/use-toast';
-import { useLifeScienceChatbot, LIFE_SCIENCE_DEFAULT_CHAT_TITLE } from './layout';
+import { useLifeScienceChatbot, LIFE_SCIENCE_DEFAULT_CHAT_TITLE } from './context';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { StreamParser, type ParsedStreamData, type ParsedContentPart } from '@/lib/stream-parser';
@@ -21,7 +21,7 @@ import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import { MermaidDiagram } from '@/components/mermaid-diagram';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { Document, Packer, Paragraph, TextRun, HeadingLevel, Table, TableCell, TableRow, WidthType, AlignmentType } from 'docx';
+import { Document, Packer, Paragraph, TextRun, HeadingLevel, Table, TableCell, TableRow, WidthType, AlignmentType, BorderStyle } from 'docx';
 import { saveAs } from 'file-saver';
 import mermaid from 'mermaid';
 
@@ -191,7 +191,7 @@ export default function LifeScienceChatbotPage() {
           const content = aiContent.parts?.flatMap(part => {
               switch (part.type) {
                   case 'text':
-                      return part.content.split('\n').map(line => {
+                      return part.content.split('\n').map((line: string) => {
                           if (!line.trim()) return new Paragraph({ text: '' });
                           
                           if (line.startsWith('### ')) {
@@ -204,7 +204,7 @@ export default function LifeScienceChatbotPage() {
                               return new Paragraph({ text: line.substring(2), bullet: { level: 0 } });
                           }
                           
-                          const textRuns = line.split(/(\*\*.*?\*\*|\*.*?\*|`.*?`)/g).map(textPart => {
+                          const textRuns = line.split(/(\*\*.*?\*\*|\*.*?\*|`.*?`)/g).map((textPart: string) => {
                               if (textPart.startsWith('**') && textPart.endsWith('**')) {
                                   return new TextRun({ text: textPart.slice(2, -2), bold: true });
                               } else if (textPart.startsWith('*') && textPart.endsWith('*')) {
@@ -216,8 +216,10 @@ export default function LifeScienceChatbotPage() {
                       });
                   case 'table':
                       const rowsData = part.content.trim().split('\n');
-                      const header = rowsData[0].split('|').map(h => h.trim()).filter(Boolean);
-                      const body = rowsData.slice(2).map(row => row.split('|').map(c => c.trim()).filter(Boolean));
+                      const header = rowsData[0].split('|').map((h: string) => h.trim()).filter(Boolean);
+                      const body = rowsData.slice(2).map(
+                          (row: string) => row.split('|').map((c: string) => c.trim()).filter(Boolean)
+                      );
                       
                       if (header.length === 0) return [];
                       
@@ -225,18 +227,18 @@ export default function LifeScienceChatbotPage() {
                           width: { size: 100, type: WidthType.PERCENTAGE },
                           rows: [
                               new TableRow({
-                                  children: header.map(h => new TableCell({
+                                  children: header.map((h: string) => new TableCell({
                                       children: [new Paragraph({ text: h, alignment: AlignmentType.CENTER })],
                                       shading: { fill: "f2f2f2" },
                                   })),
                               }),
-                              ...body.map(row => new TableRow({
-                                  children: row.slice(0, header.length).map(cell => new TableCell({ children: [new Paragraph(cell)] })),
+                              ...body.map((row: string[]) => new TableRow({
+                                  children: row.slice(0, header.length).map((cell: string) => new TableCell({ children: [new Paragraph(cell)] })),
                               })),
                           ]
                       });
                   case 'divider':
-                      return new Paragraph({ border: { bottom: { color: "auto", space: 1, value: "single", size: 6 } } });
+                      return new Paragraph({ border: { bottom: { color: "auto", space: 1, style: BorderStyle.SINGLE, size: 6 } } });
                   default:
                       return [];
               }

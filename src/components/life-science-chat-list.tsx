@@ -7,7 +7,7 @@ import { useToast } from '@/hooks/use-toast';
 import { SidebarMenu, SidebarMenuItem, SidebarMenuButton } from '@/components/ui/sidebar';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Loader2 } from 'lucide-react';
-import { useLifeScienceChatbot, LIFE_SCIENCE_DEFAULT_CHAT_TITLE } from '@/app/ai-tools/life-science-chatbot/layout';
+import { useLifeScienceChatbot, LIFE_SCIENCE_DEFAULT_CHAT_TITLE } from '@/app/ai-tools/life-science-chatbot/context';
 
 type ChatRoom = {
     id: string;

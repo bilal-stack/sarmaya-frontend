@@ -9,7 +9,9 @@ import { SearchResultsCard } from './search-results-card';
 export interface ToolAction {
   tool_name: string;
   tool_input?: string;
-  status?: 'running' | 'completed';
+  // 'failed' and 'error' are reported by the server and already
+  // rendered by the deep-research page; the union omitted them.
+  status?: 'running' | 'completed' | 'failed' | 'error';
 }
 
 interface ResearchToolCardProps {

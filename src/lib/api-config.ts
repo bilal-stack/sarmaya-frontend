@@ -86,9 +86,11 @@ export async function apiFetch(
   options: RequestInit = {},
   token?: string
 ): Promise<Response> {
-  const headers: HeadersInit = {
+  // Record rather than HeadersInit: HeadersInit is a union that also covers
+  // Headers and string[][], neither of which supports index assignment.
+  const headers: Record<string, string> = {
     'Content-Type': 'application/json',
-    ...options.headers,
+    ...(options.headers as Record<string, string> | undefined),
   };
 
   if (token) {

@@ -9,7 +9,7 @@ import { Send, Loader2, User, Play, Pause, StopCircle, Paperclip, File as FileIc
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useAuth } from '@/context/auth-context';
 import { useToast } from '@/hooks/use-toast';
-import { useBusinessConceptAssessor } from './layout';
+import { useBusinessConceptAssessor } from './context';
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '@/components/ui/resizable';
 import { StreamParser, ParsedStreamData } from '@/lib/stream-parser';
 import ReactMarkdown from 'react-markdown';

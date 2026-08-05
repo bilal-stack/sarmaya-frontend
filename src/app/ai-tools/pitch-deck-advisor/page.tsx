@@ -15,7 +15,7 @@ import { useToast } from '@/hooks/use-toast';
 import { ExecutiveSummaryReport } from '@/components/analysis/executive-summary-report';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from '@/components/ui/badge';
-import { usePitchDeckAdvisor } from './layout';
+import { usePitchDeckAdvisor } from './context';
 import { StreamParser, ParsedStreamData } from '@/lib/stream-parser';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
