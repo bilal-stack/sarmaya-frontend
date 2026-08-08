@@ -10,6 +10,7 @@ import type { NextAction } from '@/types/governance';
 import Link from 'next/link';
 import { NextActionCard } from '@/components/governance/next-action-card';
 import { AuditTimelineView } from '@/components/governance/audit-timeline';
+import { ThreeWayMatchCard } from '@/components/governance/three-way-match-card';
 import {
   Card,
   CardContent,
@@ -627,6 +628,9 @@ export default function InvoiceDetailPage() {
               </CardContent>
             </Card>
           )}
+
+          {/* Renders nothing when no purchase order is linked. */}
+          <ThreeWayMatchCard invoiceId={invoice.id} />
 
           {/* Live Audit Mode: full history, policy reason, tamper-evidence. */}
           <AuditTimelineView objectType="invoice" objectId={invoice.id} />

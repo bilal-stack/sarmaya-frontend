@@ -73,6 +73,22 @@ export const API_ENDPOINTS = {
     // Role changes require users.manage and are never self-service.
     SET_ROLE: (id: string) => `${API_BASE_URL}/users/${id}/role`,
   },
+  PURCHASE_ORDERS: {
+    LIST: `${API_BASE_URL}/purchase-orders`,
+    CREATE: `${API_BASE_URL}/purchase-orders`,
+    DETAIL: (id: string) => `${API_BASE_URL}/purchase-orders/${id}`,
+    UPDATE: (id: string) => `${API_BASE_URL}/purchase-orders/${id}`,
+    SUBMIT: (id: string) => `${API_BASE_URL}/purchase-orders/${id}/submit`,
+    APPROVE: (id: string) => `${API_BASE_URL}/purchase-orders/${id}/approve`,
+    REJECT: (id: string) => `${API_BASE_URL}/purchase-orders/${id}/reject`,
+    ISSUE: (id: string) => `${API_BASE_URL}/purchase-orders/${id}/issue`,
+    CLOSE: (id: string) => `${API_BASE_URL}/purchase-orders/${id}/close`,
+    RECEIPTS: (id: string) => `${API_BASE_URL}/purchase-orders/${id}/receipts`,
+  },
+  MATCH: {
+    // Advisory: explains what approval would say, before anyone tries.
+    INVOICE: (id: string) => `${API_BASE_URL}/invoices/${id}/match`,
+  },
   DELEGATIONS: {
     LIST: `${API_BASE_URL}/delegations`,
     CREATE: `${API_BASE_URL}/delegations`,

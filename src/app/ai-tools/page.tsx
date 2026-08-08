@@ -11,7 +11,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { FileText, Upload, Bot, MessageSquare, ScanSearch, ArrowRight, Loader2, Inbox, Building2, Bot as BotIcon, Scale, UserCheck, ShieldCheck } from 'lucide-react';
+import { FileText, Upload, Bot, MessageSquare, ScanSearch, ArrowRight, Loader2, Inbox, Building2, Bot as BotIcon, Scale, UserCheck, ShieldCheck, ShoppingCart } from 'lucide-react';
 import Link from 'next/link';
 
 const tools = [
@@ -26,6 +26,12 @@ const tools = [
     description: 'Verify vendors that are blocking invoice approvals, ordered by the value each is holding up.',
     icon: <Building2 className="h-8 w-8 text-primary" />,
     link: '/ai-tools/vendors',
+  },
+  {
+    name: 'Purchase Orders',
+    description: 'What the company has committed to buy — approved before it reaches the vendor, then matched against what actually arrived and what was billed.',
+    icon: <ShoppingCart className="h-8 w-8 text-primary" />,
+    link: '/ai-tools/purchase-orders',
   },
   {
     name: 'Invoices',
