@@ -100,6 +100,20 @@ export const API_ENDPOINTS = {
     // Advisory: explains what approval would say, before anyone tries.
     INVOICE: (id: string) => `${API_BASE_URL}/invoices/${id}/match`,
   },
+  BANK_STATEMENTS: {
+    LIST: `${API_BASE_URL}/bank-statements`,
+    // Multipart; the format is detected from the content, not the filename.
+    UPLOAD: `${API_BASE_URL}/bank-statements/upload`,
+    DETAIL: (id: string) => `${API_BASE_URL}/bank-statements/${id}`,
+    // Both directions: released runs the bank never confirmed, and debits no
+    // instruction explains.
+    RECONCILIATION: `${API_BASE_URL}/bank-statements/reconciliation`,
+    // Suggestions only. Never render these as a completed match.
+    SUGGESTIONS: (lineId: string) =>
+      `${API_BASE_URL}/bank-statements/lines/${lineId}/suggestions`,
+    MATCH: (lineId: string) => `${API_BASE_URL}/bank-statements/lines/${lineId}/match`,
+    UNMATCH: (lineId: string) => `${API_BASE_URL}/bank-statements/lines/${lineId}/unmatch`,
+  },
   DELEGATIONS: {
     LIST: `${API_BASE_URL}/delegations`,
     CREATE: `${API_BASE_URL}/delegations`,

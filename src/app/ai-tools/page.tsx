@@ -11,7 +11,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { FileText, Upload, Bot, MessageSquare, ScanSearch, ArrowRight, Loader2, Inbox, Building2, Bot as BotIcon, Scale, UserCheck, ShieldCheck, ShoppingCart, Banknote } from 'lucide-react';
+import { FileText, Upload, Bot, MessageSquare, ScanSearch, ArrowRight, Loader2, Inbox, Building2, Bot as BotIcon, Scale, UserCheck, ShieldCheck, ShoppingCart, Banknote, Landmark } from 'lucide-react';
 import Link from 'next/link';
 
 const tools = [
@@ -50,6 +50,12 @@ const tools = [
     description: 'Runs settling approved invoices, prepared by one person and released by another, ending in a bank file you upload yourself. No money moves from here.',
     icon: <Banknote className="h-8 w-8 text-primary" />,
     link: '/ai-tools/payments',
+  },
+  {
+    name: 'Reconciliation',
+    description: 'The bank statement against your own records. Finds released runs that never cleared, and — the one that matters — money that left without any instruction behind it.',
+    icon: <Landmark className="h-8 w-8 text-primary" />,
+    link: '/ai-tools/reconciliation',
   },
   {
     name: 'Detect Duplicates',
