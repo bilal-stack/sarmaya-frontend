@@ -11,7 +11,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { FileText, Upload, Bot, MessageSquare, ScanSearch, ArrowRight, Loader2, Inbox, Building2, Bot as BotIcon, Scale, UserCheck, ShieldCheck, ShoppingCart } from 'lucide-react';
+import { FileText, Upload, Bot, MessageSquare, ScanSearch, ArrowRight, Loader2, Inbox, Building2, Bot as BotIcon, Scale, UserCheck, ShieldCheck, ShoppingCart, Banknote } from 'lucide-react';
 import Link from 'next/link';
 
 const tools = [
@@ -44,6 +44,12 @@ const tools = [
     description: 'Upload and process new invoices with AI-powered OCR extraction and duplicate detection.',
     icon: <Upload className="h-8 w-8 text-primary" />,
     link: '/ai-tools/invoice-upload',
+  },
+  {
+    name: 'Payments',
+    description: 'Runs settling approved invoices, prepared by one person and released by another, ending in a bank file you upload yourself. No money moves from here.',
+    icon: <Banknote className="h-8 w-8 text-primary" />,
+    link: '/ai-tools/payments',
   },
   {
     name: 'Detect Duplicates',

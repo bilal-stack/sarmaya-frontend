@@ -85,6 +85,17 @@ export const API_ENDPOINTS = {
     CLOSE: (id: string) => `${API_BASE_URL}/purchase-orders/${id}/close`,
     RECEIPTS: (id: string) => `${API_BASE_URL}/purchase-orders/${id}/receipts`,
   },
+  PAYMENTS: {
+    LIST: `${API_BASE_URL}/payments`,
+    PREPARE: `${API_BASE_URL}/payments`,
+    PAYABLE: `${API_BASE_URL}/payments/payable`,
+    DETAIL: (id: string) => `${API_BASE_URL}/payments/${id}`,
+    SUBMIT: (id: string) => `${API_BASE_URL}/payments/${id}/submit`,
+    RELEASE: (id: string) => `${API_BASE_URL}/payments/${id}/release`,
+    REJECT: (id: string) => `${API_BASE_URL}/payments/${id}/reject`,
+    // Only a released run exports; the file is downloaded, never sent.
+    BANK_FILE: (id: string) => `${API_BASE_URL}/payments/${id}/bank-file`,
+  },
   MATCH: {
     // Advisory: explains what approval would say, before anyone tries.
     INVOICE: (id: string) => `${API_BASE_URL}/invoices/${id}/match`,
