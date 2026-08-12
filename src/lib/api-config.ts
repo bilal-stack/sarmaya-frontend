@@ -73,6 +73,30 @@ export const API_ENDPOINTS = {
     // Role changes require users.manage and are never self-service.
     SET_ROLE: (id: string) => `${API_BASE_URL}/users/${id}/role`,
   },
+  REQUISITIONS: {
+    LIST: `${API_BASE_URL}/requisitions`,
+    CREATE: `${API_BASE_URL}/requisitions`,
+    DETAIL: (id: string) => `${API_BASE_URL}/requisitions/${id}`,
+    SUBMIT: (id: string) => `${API_BASE_URL}/requisitions/${id}/submit`,
+    APPROVE: (id: string) => `${API_BASE_URL}/requisitions/${id}/approve`,
+    REJECT: (id: string) => `${API_BASE_URL}/requisitions/${id}/reject`,
+    CANCEL: (id: string) => `${API_BASE_URL}/requisitions/${id}/cancel`,
+  },
+  RFQS: {
+    LIST: `${API_BASE_URL}/rfqs`,
+    CREATE: `${API_BASE_URL}/rfqs`,
+    DETAIL: (id: string) => `${API_BASE_URL}/rfqs/${id}`,
+    INVITE: (id: string) => `${API_BASE_URL}/rfqs/${id}/vendors`,
+    ISSUE: (id: string) => `${API_BASE_URL}/rfqs/${id}/issue`,
+    QUOTES: (id: string) => `${API_BASE_URL}/rfqs/${id}/quotes`,
+    // Quotes lock here — nothing may be added or altered afterwards.
+    CLOSE: (id: string) => `${API_BASE_URL}/rfqs/${id}/close`,
+    COMPARISON: (id: string) => `${API_BASE_URL}/rfqs/${id}/comparison`,
+    // Anything but the lowest compliant quote needs a written reason.
+    AWARD: (id: string) => `${API_BASE_URL}/rfqs/${id}/award`,
+    CONVERT: (id: string) => `${API_BASE_URL}/rfqs/${id}/convert`,
+    CANCEL: (id: string) => `${API_BASE_URL}/rfqs/${id}/cancel`,
+  },
   PURCHASE_ORDERS: {
     LIST: `${API_BASE_URL}/purchase-orders`,
     CREATE: `${API_BASE_URL}/purchase-orders`,

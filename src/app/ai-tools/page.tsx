@@ -11,7 +11,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { FileText, Upload, Bot, MessageSquare, ScanSearch, ArrowRight, Loader2, Inbox, Building2, Bot as BotIcon, Scale, UserCheck, ShieldCheck, ShoppingCart, Banknote, Landmark } from 'lucide-react';
+import { FileText, Upload, Bot, MessageSquare, ScanSearch, ArrowRight, Loader2, Inbox, Building2, Bot as BotIcon, Scale, UserCheck, ShieldCheck, ShoppingCart, Banknote, Landmark, ClipboardList, Gavel } from 'lucide-react';
 import Link from 'next/link';
 
 const tools = [
@@ -26,6 +26,18 @@ const tools = [
     description: 'Verify vendors that are blocking invoice approvals, ordered by the value each is holding up.',
     icon: <Building2 className="h-8 w-8 text-primary" />,
     link: '/ai-tools/vendors',
+  },
+  {
+    name: 'Requisitions',
+    description: 'What was asked for and why — the record every order traces back to. Approved before anyone goes to market, and the approved estimate is the ceiling.',
+    icon: <ClipboardList className="h-8 w-8 text-primary" />,
+    link: '/ai-tools/requisitions',
+  },
+  {
+    name: 'Tenders',
+    description: 'Invite vendors, capture their quotes, compare them side by side and award. Quotes lock when quoting closes, and picking anything but the cheapest needs a reason.',
+    icon: <Gavel className="h-8 w-8 text-primary" />,
+    link: '/ai-tools/rfqs',
   },
   {
     name: 'Purchase Orders',
