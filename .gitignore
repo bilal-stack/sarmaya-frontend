@@ -42,4 +42,8 @@ next-env.d.ts
 
 # firebase
 firebase-debug.log
-firestore-debug.log.claude/
+firestore-debug.log
+
+# local Claude Code config
+.claude/
+
