@@ -1,4 +1,21 @@
-export const API_BASE_URL = 'http://127.0.0.1:8000/api/v1';
+/**
+ * Where the API lives.
+ *
+ * Read from the environment so a deployed build can reach a deployed API —
+ * this was hardcoded to localhost, which meant the frontend could physically
+ * never talk to anything but a developer's own machine.
+ *
+ * NEXT_PUBLIC_ is required: this runs in the browser, so the value is inlined
+ * at build time and is public by definition. Never put a secret here.
+ *
+ * The localhost fallback keeps `npm run dev` working with no setup. It is a
+ * default, not a secret, and a deployed build that forgets the variable will
+ * fail loudly in the browser console rather than silently talk to the wrong
+ * host.
+ */
+export const API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_BASE_URL?.replace(/\/+$/, '') ??
+  'http://127.0.0.1:8000/api/v1';
 
 export const API_ENDPOINTS = {
   AUTH: {
