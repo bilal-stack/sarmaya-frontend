@@ -11,7 +11,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { FileText, Upload, Bot, MessageSquare, ScanSearch, ArrowRight, Loader2, Inbox, Building2, Bot as BotIcon, Scale, UserCheck, ShieldCheck, ShoppingCart, Banknote, Landmark, ClipboardList, Gavel } from 'lucide-react';
+import { FileText, Upload, Bot, MessageSquare, ScanSearch, ArrowRight, Loader2, Inbox, Building2, Bot as BotIcon, Scale, UserCheck, ShieldCheck, ShoppingCart, Banknote, Landmark, ClipboardList, Gavel, Users } from 'lucide-react';
 import Link from 'next/link';
 
 const tools = [
@@ -80,6 +80,12 @@ const tools = [
     description: 'Opt-in auto-approval for low-risk invoices, with a dry run that shows exactly what would be approved and why.',
     icon: <BotIcon className="h-8 w-8 text-primary" />,
     link: '/ai-tools/autopilot',
+  },
+  {
+    name: 'People',
+    description: 'Who has access and what each of them may do. Accounts are granted here — self-registration is closed, so authority is handed out by someone accountable for it.',
+    icon: <Users className="h-8 w-8 text-primary" />,
+    link: '/ai-tools/users',
   },
   {
     name: 'Approval Matrix',

@@ -73,6 +73,13 @@ export const API_ENDPOINTS = {
     // Role changes require users.manage and are never self-service.
     SET_ROLE: (id: string) => `${API_BASE_URL}/users/${id}/role`,
   },
+  DASHBOARD: {
+    // Headline figures: pending approvals, this month's volume, top vendors.
+    STATS: `${API_BASE_URL}/dashboard/stats`,
+    // The pending invoices themselves, so the count is actionable rather than
+    // something you have to go and find.
+    PENDING: `${API_BASE_URL}/dashboard/pending`,
+  },
   REQUISITIONS: {
     LIST: `${API_BASE_URL}/requisitions`,
     CREATE: `${API_BASE_URL}/requisitions`,
