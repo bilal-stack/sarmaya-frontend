@@ -6,19 +6,44 @@
 
 // --- Decision Inbox ---------------------------------------------------------
 
-export type InboxCategory = 'duplicate_review' | 'vendor_verification' | 'approval';
+export type InboxCategory =
+  | 'duplicate_review'
+  | 'vendor_verification'
+  | 'approval'
+  | 'requisition_approval'
+  | 'sourcing_award'
+  | 'purchase_order_approval'
+  | 'payment_release'
+  | 'vendor_bank_change'
+  | 'unexplained_debit';
 
+/** The Build Book's own vocabulary for what kind of work an item is. */
+export type WorkItemType =
+  | 'approval'
+  | 'exception'
+  | 'review'
+  | 'reconciliation'
+  | 'admin';
+
+/**
+ * Items are no longer invoice-shaped. Every module contributes to the inbox, so
+ * the identity fields are neutral (`object_type`/`reference`) and each item
+ * carries the link to open it — the reader no longer builds URLs per category.
+ */
 export interface DecisionInboxItem {
   category: InboxCategory;
-  priority: number;          // 1 = most urgent
+  work_item_type: WorkItemType;
+  priority: number;          // lower sorts first
   action: string;            // human label for the next step
   reason: string;            // why this needs attention now
-  invoice_id: string;
-  invoice_number: string | null;
-  vendor_name: string | null;
+  object_type: string;       // 'invoice' | 'requisition' | 'payment' | ...
+  object_id: string;
+  reference: string | null;  // the number a person would quote
+  subtitle: string | null;   // vendor, title, counterparty — whatever identifies it
   amount: number;
   current_state: string | null;
   required_role: string | null;
+  detail_url: string;
   timeline_url: string;
   sla_due_at: string | null;
   overdue: boolean;
@@ -28,6 +53,7 @@ export interface DecisionInboxItem {
 export interface DecisionInbox {
   total: number;
   counts: Record<string, number>;
+  by_work_item_type: Partial<Record<WorkItemType, number>>;
   overdue_count: number;
   items: DecisionInboxItem[];
 }

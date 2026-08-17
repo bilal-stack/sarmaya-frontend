@@ -13,11 +13,24 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import {
   Loader2, Inbox, AlertTriangle, Clock, ShieldAlert, Copy, BadgeCheck,
-  ArrowRight, RefreshCw, BellRing,
+  ArrowRight, RefreshCw, BellRing, Landmark, Banknote, ClipboardCheck,
+  Gavel, FileQuestion,
 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 
 const CATEGORY_META: Record<string, { label: string; icon: React.ReactNode; tone: string }> = {
+  // Red is reserved for the two categories where money is already gone or is
+  // being redirected. Everything else is ordinary queued work.
+  unexplained_debit: {
+    label: 'Unexplained debit',
+    icon: <AlertTriangle className="h-4 w-4" />,
+    tone: 'border-red-500/50 bg-red-500/10 text-red-600',
+  },
+  vendor_bank_change: {
+    label: 'Bank detail change',
+    icon: <Landmark className="h-4 w-4" />,
+    tone: 'border-red-500/50 bg-red-500/10 text-red-600',
+  },
   duplicate_review: {
     label: 'Duplicate review',
     icon: <Copy className="h-4 w-4" />,
@@ -28,11 +41,40 @@ const CATEGORY_META: Record<string, { label: string; icon: React.ReactNode; tone
     icon: <ShieldAlert className="h-4 w-4" />,
     tone: 'border-orange-500/50 bg-orange-500/10 text-orange-600',
   },
+  payment_release: {
+    label: 'Payment release',
+    icon: <Banknote className="h-4 w-4" />,
+    tone: 'border-emerald-500/50 bg-emerald-500/10 text-emerald-600',
+  },
   approval: {
-    label: 'Approval',
+    label: 'Invoice approval',
     icon: <BadgeCheck className="h-4 w-4" />,
     tone: 'border-blue-500/50 bg-blue-500/10 text-blue-600',
   },
+  purchase_order_approval: {
+    label: 'Order approval',
+    icon: <ClipboardCheck className="h-4 w-4" />,
+    tone: 'border-blue-500/50 bg-blue-500/10 text-blue-600',
+  },
+  sourcing_award: {
+    label: 'Award decision',
+    icon: <Gavel className="h-4 w-4" />,
+    tone: 'border-violet-500/50 bg-violet-500/10 text-violet-600',
+  },
+  requisition_approval: {
+    label: 'Requisition approval',
+    icon: <FileQuestion className="h-4 w-4" />,
+    tone: 'border-slate-500/50 bg-slate-500/10 text-slate-600',
+  },
+};
+
+/** The Build Book's grouping, used for the summary row. */
+const WORK_TYPE_LABEL: Record<string, string> = {
+  approval: 'Approvals',
+  exception: 'Exceptions',
+  review: 'AI reviews',
+  reconciliation: 'Reconciliation',
+  admin: 'Master data',
 };
 
 export default function DecisionInboxPage() {
@@ -147,7 +189,8 @@ export default function DecisionInboxPage() {
         </div>
       </div>
 
-      {/* Summary */}
+      {/* Summary. Broken down by work item type rather than by category: with
+          nine categories the old two-of-N tiles showed an arbitrary pair. */}
       <div className="grid gap-3 grid-cols-2 md:grid-cols-4 mb-6">
         <SummaryTile label="Waiting on you" value={inbox?.total ?? 0} />
         <SummaryTile
@@ -155,9 +198,12 @@ export default function DecisionInboxPage() {
           value={inbox?.overdue_count ?? 0}
           tone={(inbox?.overdue_count ?? 0) > 0 ? 'text-red-500' : undefined}
         />
-        {Object.entries(inbox?.counts ?? {}).slice(0, 2).map(([key, count]) => (
-          <SummaryTile key={key} label={CATEGORY_META[key]?.label ?? key} value={count} />
-        ))}
+        {Object.entries(inbox?.by_work_item_type ?? {})
+          .sort(([, a], [, b]) => (b ?? 0) - (a ?? 0))
+          .slice(0, 2)
+          .map(([key, count]) => (
+            <SummaryTile key={key} label={WORK_TYPE_LABEL[key] ?? key} value={count ?? 0} />
+          ))}
       </div>
 
       {(inbox?.overdue_count ?? 0) > 0 && (
@@ -202,7 +248,11 @@ export default function DecisionInboxPage() {
       ) : (
         <div className="space-y-3">
           {items.map((item) => (
-            <InboxCard key={item.invoice_id} item={item} router={router} />
+            <InboxCard
+              key={`${item.object_type}:${item.object_id}`}
+              item={item}
+              router={router}
+            />
           ))}
         </div>
       )}
@@ -240,17 +290,22 @@ function InboxCard({
         <div className="flex flex-wrap items-start justify-between gap-2">
           <div className="min-w-0">
             <CardTitle className="text-base flex items-center gap-2 flex-wrap">
-              {item.invoice_number ?? 'Invoice'}
-              <span className="text-muted-foreground font-normal">
-                · {item.vendor_name ?? 'Unknown vendor'}
-              </span>
+              {item.reference ?? meta.label}
+              {item.subtitle && (
+                <span className="text-muted-foreground font-normal">· {item.subtitle}</span>
+              )}
             </CardTitle>
             <CardDescription className="mt-1">{item.reason}</CardDescription>
           </div>
           <div className="text-right shrink-0">
-            <p className="font-semibold">
-              {item.amount.toLocaleString(undefined, { maximumFractionDigits: 0 })}
-            </p>
+            {/* Not every work item is about a sum. A bank change and a tender
+                with no quotes yet both carry 0, and printing that reads as
+                "zero money" rather than "no amount applies here". */}
+            {item.amount > 0 && (
+              <p className="font-semibold">
+                {item.amount.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+              </p>
+            )}
             {item.required_role && (
               <p className="text-xs text-muted-foreground mt-0.5">
                 needs {item.required_role.toUpperCase()}
@@ -293,14 +348,17 @@ function InboxCard({
         <div className="flex flex-wrap items-center justify-between gap-2">
           <p className="text-sm font-medium">{item.action}</p>
           <div className="flex gap-2">
+            {/* Both links come from the item now. Building them here meant one
+                route per category, and every new module silently sent the
+                reader to an invoice page that did not exist. */}
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => router.push(`/ai-tools/invoices/${item.invoice_id}?tab=audit`)}
+              onClick={() => router.push(`${item.detail_url}?tab=audit`)}
             >
               Audit trail
             </Button>
-            <Button size="sm" onClick={() => router.push(`/ai-tools/invoices/${item.invoice_id}`)}>
+            <Button size="sm" onClick={() => router.push(item.detail_url)}>
               Open
               <ArrowRight className="h-4 w-4 ml-1" />
             </Button>
