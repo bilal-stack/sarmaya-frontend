@@ -55,6 +55,13 @@ export interface Payment extends PaymentSummary {
   bank_file_hash: string | null;
   bank_file_generated_at: string | null;
   lines: PaymentLine[];
+  /**
+   * False when the destination accounts on the lines are masked for your role.
+   * The values are still present and still identify the account by its last
+   * four, but they are not what is stored — say so rather than showing bullets
+   * as if the record were incomplete.
+   */
+  bank_details_visible: boolean;
 }
 
 /** An approved invoice not already claimed by an open or released run. */

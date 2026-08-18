@@ -396,6 +396,14 @@ export default function PaymentDetailPage() {
             </Table>
           </div>
 
+          {payment.bank_details_visible === false && (
+            <p className="text-xs text-muted-foreground mt-3">
+              Destination accounts are shown by their last four digits only —
+              your role can confirm which account was paid without being handed
+              the number itself.
+            </p>
+          )}
+
           {state !== 'released' &&
             payment.lines.some((l) => !l.iban && !l.bank_account_number) && (
             <div className="flex items-start gap-2 rounded-md border border-orange-500/40 bg-orange-500/10 p-3 mt-3">
