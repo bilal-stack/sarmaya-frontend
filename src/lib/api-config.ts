@@ -89,6 +89,15 @@ export const API_ENDPOINTS = {
     LIST: `${API_BASE_URL}/watchlist`,
     ACKNOWLEDGE: (id: string) => `${API_BASE_URL}/watchlist/${id}/acknowledge`,
   },
+  // The notification outbox. Messages are queued in the action's transaction
+  // and delivered by a scheduler; these endpoints are for seeing that it is
+  // actually moving. Needs workflow.manage (admin).
+  NOTIFICATIONS: {
+    DISPATCH: `${API_BASE_URL}/notifications/dispatch`,
+    QUEUE: `${API_BASE_URL}/notifications/queue`,
+    SUMMARY: `${API_BASE_URL}/notifications/queue/summary`,
+    RETRY_FAILED: `${API_BASE_URL}/notifications/queue/retry-failed`,
+  },
   CONFIG: {
     APPROVAL_POLICIES: `${API_BASE_URL}/config/approval-policies`,
     SIMULATE: `${API_BASE_URL}/config/approval-policies/simulate`,

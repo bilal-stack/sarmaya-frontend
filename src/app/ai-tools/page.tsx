@@ -11,7 +11,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { FileText, Upload, Bot, MessageSquare, ScanSearch, ArrowRight, Loader2, Inbox, Building2, Bot as BotIcon, Scale, UserCheck, ShieldCheck, ShoppingCart, Banknote, Landmark, ClipboardList, Gavel, Users, Eye } from 'lucide-react';
+import { FileText, Upload, Bot, MessageSquare, ScanSearch, ArrowRight, Loader2, Inbox, Building2, Bot as BotIcon, Scale, UserCheck, ShieldCheck, ShoppingCart, Banknote, Landmark, ClipboardList, Gavel, Users, Eye, Mail } from 'lucide-react';
 import Link from 'next/link';
 
 const tools = [
@@ -100,6 +100,13 @@ const tools = [
     description: 'Who has access and what each of them may do. Accounts are granted here — self-registration is closed, so authority is handed out by someone accountable for it.',
     icon: <Users className="h-8 w-8 text-primary" />,
     link: '/ai-tools/users',
+  },
+  {
+    name: 'Notification Queue',
+    description:
+      'Approvals and escalations are queued with the action that produced them and sent by a scheduler. This is where you see the queue is actually moving — a stalled one means nobody is being told anything.',
+    icon: <Mail className="h-8 w-8 text-primary" />,
+    link: '/ai-tools/notifications',
   },
   {
     name: 'Approval Matrix',
