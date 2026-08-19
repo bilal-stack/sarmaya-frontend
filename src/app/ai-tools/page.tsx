@@ -11,10 +11,17 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { FileText, Upload, Bot, MessageSquare, ScanSearch, ArrowRight, Loader2, Inbox, Building2, Bot as BotIcon, Scale, UserCheck, ShieldCheck, ShoppingCart, Banknote, Landmark, ClipboardList, Gavel, Users, Eye, Mail } from 'lucide-react';
+import { FileText, Upload, Bot, MessageSquare, ScanSearch, ArrowRight, Loader2, Inbox, Building2, Bot as BotIcon, Scale, UserCheck, ShieldCheck, ShoppingCart, Banknote, Landmark, ClipboardList, Gavel, Users, Eye, Mail, Gauge } from 'lucide-react';
 import Link from 'next/link';
 
 const tools = [
+  {
+    name: 'Control Room',
+    description:
+      'What is stuck, why, and what it is worth — with cycle times by role, exception causes by vendor, reconciliation health, evidence gaps, policy overrides and autopilot reversals behind it.',
+    icon: <Gauge className="h-8 w-8 text-primary" />,
+    link: '/ai-tools/control-room',
+  },
   {
     name: 'Decision Inbox',
     description: 'Everything waiting on you, reduced to its single most blocking next step — with SLA timers and one-click escalation.',

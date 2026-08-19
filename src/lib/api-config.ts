@@ -124,6 +124,16 @@ export const API_ENDPOINTS = {
     SET_ROLE: (id: string) => `${API_BASE_URL}/users/${id}/role`,
   },
   DASHBOARD: {
+    // The seven Build Book dashboards, computed from history rather than from
+    // counters. OVERVIEW returns all seven in one call.
+    OVERVIEW: `${API_BASE_URL}/dashboard/overview`,
+    CONTROL_ROOM: `${API_BASE_URL}/dashboard/control-room`,
+    BOTTLENECKS: `${API_BASE_URL}/dashboard/bottlenecks`,
+    EXCEPTIONS: `${API_BASE_URL}/dashboard/exceptions`,
+    POLICY_OVERRIDES: `${API_BASE_URL}/dashboard/policy-overrides`,
+    EVIDENCE: `${API_BASE_URL}/dashboard/evidence`,
+    RECONCILIATION_HEALTH: `${API_BASE_URL}/dashboard/reconciliation-health`,
+    AUTOPILOT_HEALTH: `${API_BASE_URL}/dashboard/autopilot-health`,
     // Headline figures: pending approvals, this month's volume, top vendors.
     STATS: `${API_BASE_URL}/dashboard/stats`,
     // The pending invoices themselves, so the count is actionable rather than
