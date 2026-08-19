@@ -28,6 +28,13 @@ const tools = [
     link: '/ai-tools/vendors',
   },
   {
+    name: 'Vendor Bank Changes',
+    description:
+      'Redirecting a vendor’s payments is the most common invoice fraud there is, so bank details cannot be edited — they move through a request someone else approves, then a cooling period before any payment may use them.',
+    icon: <Landmark className="h-8 w-8 text-primary" />,
+    link: '/ai-tools/vendors/bank-changes',
+  },
+  {
     name: 'Requisitions',
     description: 'What was asked for and why — the record every order traces back to. Approved before anyone goes to market, and the approved estimate is the ceiling.',
     icon: <ClipboardList className="h-8 w-8 text-primary" />,

@@ -69,6 +69,19 @@ export const API_ENDPOINTS = {
     LIST: `${API_BASE_URL}/vendors`,
     REVIEW_QUEUE: `${API_BASE_URL}/vendors/review-queue`,
     SET_STATUS: (id: string) => `${API_BASE_URL}/vendors/${id}/status`,
+    // Bank details never change through PATCH /vendors/{id} — the server
+    // refuses those fields. They move through a request a second person
+    // approves, then a cooling period, then an explicit apply.
+    BANK_CHANGES: `${API_BASE_URL}/vendors/bank-changes`,
+    REQUEST_BANK_CHANGE: (id: string) => `${API_BASE_URL}/vendors/${id}/bank-change`,
+    APPROVE_BANK_CHANGE: (id: string) =>
+      `${API_BASE_URL}/vendors/bank-changes/${id}/approve`,
+    APPLY_BANK_CHANGE: (id: string) =>
+      `${API_BASE_URL}/vendors/bank-changes/${id}/apply`,
+    REJECT_BANK_CHANGE: (id: string) =>
+      `${API_BASE_URL}/vendors/bank-changes/${id}/reject`,
+    CANCEL_BANK_CHANGE: (id: string) =>
+      `${API_BASE_URL}/vendors/bank-changes/${id}/cancel`,
   },
   CONFIG: {
     APPROVAL_POLICIES: `${API_BASE_URL}/config/approval-policies`,
