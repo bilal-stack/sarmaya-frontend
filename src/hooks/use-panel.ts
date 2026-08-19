@@ -26,6 +26,10 @@ export interface PanelState<T> {
   data: T | null;
   loading: boolean;
   error: string | null;
+  /** The HTTP status, when there was one. Callers that need to tell "you may
+   *  not see this" apart from "this broke" check for 403 — the watchlist shows
+   *  an explanation for the first and a retry for the second. */
+  status: number | null;
   reload: () => void;
 }
 
@@ -34,6 +38,7 @@ export function usePanel<T>(url: string, reloadKey: number = 0): PanelState<T> {
   const [data, setData] = useState<T | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [status, setStatus] = useState<number | null>(null);
 
   const load = useCallback(async () => {
     if (authLoading || !user?.access_token) return;
@@ -41,6 +46,7 @@ export function usePanel<T>(url: string, reloadKey: number = 0): PanelState<T> {
     setError(null);
     try {
       const response = await apiFetch(url, {}, user.access_token);
+      setStatus(response.status);
       if (!response.ok) {
         const body = await response.json().catch(() => ({}));
         throw new Error(body.detail || 'Could not load this panel');
@@ -58,5 +64,5 @@ export function usePanel<T>(url: string, reloadKey: number = 0): PanelState<T> {
     load();
   }, [load, reloadKey]);
 
-  return { data, loading, error, reload: load };
+  return { data, loading, error, status, reload: load };
 }

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/auth-context';
 import { useToast } from '@/hooks/use-toast';
@@ -11,6 +11,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
+import { Skeleton } from '@/components/ui/skeleton';
+import { usePanel } from '@/hooks/use-panel';
 import {
   Loader2, Inbox, AlertTriangle, Clock, ShieldAlert, Copy, BadgeCheck,
   ArrowRight, RefreshCw, BellRing, Landmark, Banknote, ClipboardCheck,
@@ -82,44 +84,24 @@ export default function DecisionInboxPage() {
   const { user, isLoading: authLoading } = useAuth();
   const { toast } = useToast();
 
-  const [inbox, setInbox] = useState<DecisionInbox | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
   const [overdueOnly, setOverdueOnly] = useState(false);
   const [isEscalating, setIsEscalating] = useState(false);
+  const [reloadKey, setReloadKey] = useState(0);
 
-  const fetchInbox = useCallback(async () => {
-    if (authLoading) return;
-    if (!user?.access_token) {
-      router.push('/login');
-      return;
-    }
-
-    setIsLoading(true);
-    try {
-      const params = new URLSearchParams();
-      if (overdueOnly) params.append('overdue_only', 'true');
-
-      const response = await apiFetch(
-        `${API_ENDPOINTS.INBOX.LIST}?${params.toString()}`,
-        {},
-        user.access_token
-      );
-      if (!response.ok) throw new Error('Failed to load the decision inbox');
-      setInbox(await response.json());
-    } catch (error: any) {
-      toast({
-        variant: 'destructive',
-        title: 'Could not load your inbox',
-        description: error.message,
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  }, [authLoading, user, overdueOnly, router, toast]);
+  // The page frame renders before this answers, and the tiles and rows show
+  // skeletons meanwhile. Changing the filter changes the url, which reloads on
+  // its own — the previous list stays on screen until the new one arrives
+  // rather than the page blanking.
+  const {
+    data: inbox, loading: isLoading, error, reload: fetchInbox,
+  } = usePanel<DecisionInbox>(
+    `${API_ENDPOINTS.INBOX.LIST}?${overdueOnly ? 'overdue_only=true' : ''}`,
+    reloadKey
+  );
 
   useEffect(() => {
-    fetchInbox();
-  }, [fetchInbox]);
+    if (!authLoading && !user) router.push('/login');
+  }, [authLoading, user, router]);
 
   const escalateOverdue = async () => {
     if (!user?.access_token) return;
@@ -142,7 +124,7 @@ export default function DecisionInboxPage() {
             ? `${result.escalated_count} breached item(s) escalated and the approver notified.`
             : 'No SLA breaches are awaiting escalation.',
       });
-      fetchInbox();
+      setReloadKey((k) => k + 1);
     } catch (error: any) {
       toast({ variant: 'destructive', title: 'Escalation failed', description: error.message });
     } finally {
@@ -150,16 +132,12 @@ export default function DecisionInboxPage() {
     }
   };
 
-  if (authLoading || (isLoading && !inbox)) {
-    return (
-      <div className="flex items-center justify-center h-[calc(100vh-200px)]">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
-  }
-  if (!user) return null;
+  // No full-page spinner. The heading, the filters and the tile frames are
+  // correct before the request returns, so the page never jumps.
+  if (!authLoading && !user) return null;
 
   const items = inbox?.items ?? [];
+  const firstLoad = isLoading && !inbox;
 
   return (
     <div className="p-4 md:p-8 max-w-5xl mx-auto w-full">
@@ -192,11 +170,12 @@ export default function DecisionInboxPage() {
       {/* Summary. Broken down by work item type rather than by category: with
           nine categories the old two-of-N tiles showed an arbitrary pair. */}
       <div className="grid gap-3 grid-cols-2 md:grid-cols-4 mb-6">
-        <SummaryTile label="Waiting on you" value={inbox?.total ?? 0} />
+        <SummaryTile label="Waiting on you" value={inbox?.total ?? 0} loading={firstLoad} />
         <SummaryTile
           label="SLA breached"
           value={inbox?.overdue_count ?? 0}
           tone={(inbox?.overdue_count ?? 0) > 0 ? 'text-red-500' : undefined}
+          loading={firstLoad}
         />
         {Object.entries(inbox?.by_work_item_type ?? {})
           .sort(([, a], [, b]) => (b ?? 0) - (a ?? 0))
@@ -233,7 +212,24 @@ export default function DecisionInboxPage() {
         </Card>
       )}
 
-      {items.length === 0 ? (
+      {firstLoad ? (
+        <div className="space-y-3">
+          <InboxCardSkeleton />
+          <InboxCardSkeleton />
+          <InboxCardSkeleton />
+        </div>
+      ) : error ? (
+        <Card>
+          <CardContent className="py-12 text-center">
+            <p className="font-medium">Could not load your inbox</p>
+            <p className="text-sm text-muted-foreground mt-1">{error}</p>
+            <Button variant="outline" size="sm" className="mt-3" onClick={fetchInbox}>
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Try again
+            </Button>
+          </CardContent>
+        </Card>
+      ) : items.length === 0 ? (
         <Card>
           <CardContent className="py-16 text-center">
             <BadgeCheck className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
@@ -260,12 +256,49 @@ export default function DecisionInboxPage() {
   );
 }
 
-function SummaryTile({ label, value, tone }: { label: string; value: number; tone?: string }) {
+function SummaryTile({
+  label, value, tone, loading,
+}: {
+  label: string;
+  value: number;
+  tone?: string;
+  loading?: boolean;
+}) {
   return (
     <Card>
       <CardContent className="py-4">
         <p className="text-xs text-muted-foreground">{label}</p>
-        <p className={`text-2xl font-semibold mt-1 ${tone ?? ''}`}>{value}</p>
+        {loading ? (
+          <Skeleton className="h-8 w-12 mt-1" />
+        ) : (
+          <p className={`text-2xl font-semibold mt-1 ${tone ?? ''}`}>{value}</p>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+/** A stand-in with the same shape as a real row, so the list does not jump
+ *  when the data lands. */
+function InboxCardSkeleton() {
+  return (
+    <Card>
+      <CardHeader className="pb-3">
+        <div className="flex items-start justify-between gap-2">
+          <div className="space-y-2 flex-1">
+            <Skeleton className="h-5 w-56" />
+            <Skeleton className="h-4 w-3/4" />
+          </div>
+          <Skeleton className="h-6 w-20" />
+        </div>
+      </CardHeader>
+      <CardContent className="pt-0">
+        <Skeleton className="h-5 w-32 mb-3" />
+        <Separator className="mb-3" />
+        <div className="flex items-center justify-between">
+          <Skeleton className="h-4 w-40" />
+          <Skeleton className="h-8 w-28" />
+        </div>
       </CardContent>
     </Card>
   );

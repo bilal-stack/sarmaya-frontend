@@ -16,18 +16,20 @@
  * change cannot sign it off.
  */
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/auth-context';
 import { useToast } from '@/hooks/use-toast';
 import { API_ENDPOINTS, apiFetch } from '@/lib/api-config';
 import { parseApiDate } from '@/lib/datetime';
-import type { WatchlistAlert, AlertCategory } from '@/types/watchlist';
+import type { WatchlistAlert, AlertCategory, WatchlistFeed } from '@/types/watchlist';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { Separator } from '@/components/ui/separator';
+import { Skeleton } from '@/components/ui/skeleton';
+import { usePanel } from '@/hooks/use-panel';
 import {
   Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
 } from '@/components/ui/dialog';
@@ -69,54 +71,36 @@ export default function WatchlistPage() {
   const { user, isLoading: authLoading } = useAuth();
   const { toast } = useToast();
 
-  const [alerts, setAlerts] = useState<WatchlistAlert[]>([]);
-  const [openCount, setOpenCount] = useState(0);
-  const [isLoading, setIsLoading] = useState(true);
   const [openOnly, setOpenOnly] = useState(true);
   const [category, setCategory] = useState<AlertCategory | 'all'>('all');
   const [reviewing, setReviewing] = useState<WatchlistAlert | null>(null);
   const [note, setNote] = useState('');
   const [saving, setSaving] = useState(false);
-  const [denied, setDenied] = useState(false);
+  const [reloadKey, setReloadKey] = useState(0);
 
-  const load = useCallback(async () => {
-    if (authLoading) return;
-    if (!user?.access_token) {
-      router.push('/login');
-      return;
-    }
-    setIsLoading(true);
-    try {
-      const params = new URLSearchParams();
-      if (openOnly) params.append('open_only', 'true');
-      if (category !== 'all') params.append('category', category);
+  // The frame renders before this answers. Changing a filter changes the url,
+  // which reloads on its own, and the current list stays up until the new one
+  // arrives rather than the page blanking between clicks.
+  const params = new URLSearchParams();
+  if (openOnly) params.append('open_only', 'true');
+  if (category !== 'all') params.append('category', category);
 
-      const response = await apiFetch(
-        `${API_ENDPOINTS.WATCHLIST.LIST}?${params.toString()}`,
-        {},
-        user.access_token
-      );
-      if (response.status === 403) {
-        // Oversight roles only. Say so rather than rendering an empty list,
-        // which would read as "nothing has changed" — the opposite of true.
-        setDenied(true);
-        return;
-      }
-      if (!response.ok) throw new Error('Could not load the watchlist');
-      const body = await response.json();
-      setAlerts(body.items ?? []);
-      setOpenCount(body.open_count ?? 0);
-      setDenied(false);
-    } catch (error: any) {
-      toast({ variant: 'destructive', title: 'Load failed', description: error.message });
-    } finally {
-      setIsLoading(false);
-    }
-  }, [authLoading, user, openOnly, category, router, toast]);
+  const feed = usePanel<WatchlistFeed>(
+    `${API_ENDPOINTS.WATCHLIST.LIST}?${params.toString()}`, reloadKey
+  );
+  const load = () => setReloadKey((k) => k + 1);
+
+  const alerts = feed.data?.items ?? [];
+  const openCount = feed.data?.open_count ?? 0;
+  // Oversight roles only. A 403 gets its own explanation rather than an empty
+  // list, which would read as "nothing has changed" — the opposite of true.
+  const denied = feed.status === 403;
+  const isLoading = feed.loading;
+  const firstLoad = feed.loading && !feed.data;
 
   useEffect(() => {
-    load();
-  }, [load]);
+    if (!authLoading && !user) router.push('/login');
+  }, [authLoading, user, router]);
 
   const acknowledge = async () => {
     if (!reviewing || !user?.access_token) return;
@@ -142,14 +126,9 @@ export default function WatchlistPage() {
     }
   };
 
-  if (authLoading || (isLoading && alerts.length === 0 && !denied)) {
-    return (
-      <div className="flex items-center justify-center h-[calc(100vh-200px)]">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    );
-  }
-  if (!user) return null;
+  // No full-page spinner: the heading, the filters and the tile frames are
+  // right before the request returns.
+  if (!authLoading && !user) return null;
 
   if (denied) {
     return (
@@ -201,15 +180,23 @@ export default function WatchlistPage() {
         <Card>
           <CardContent className="py-4">
             <p className="text-xs text-muted-foreground">Awaiting review</p>
-            <p className={`text-2xl font-semibold mt-1 ${openCount > 0 ? 'text-yellow-600' : ''}`}>
-              {openCount}
-            </p>
+            {firstLoad ? (
+              <Skeleton className="h-8 w-12 mt-1" />
+            ) : (
+              <p className={`text-2xl font-semibold mt-1 ${openCount > 0 ? 'text-yellow-600' : ''}`}>
+                {openCount}
+              </p>
+            )}
           </CardContent>
         </Card>
         <Card>
           <CardContent className="py-4">
             <p className="text-xs text-muted-foreground">Showing</p>
-            <p className="text-2xl font-semibold mt-1">{alerts.length}</p>
+            {firstLoad ? (
+              <Skeleton className="h-8 w-12 mt-1" />
+            ) : (
+              <p className="text-2xl font-semibold mt-1">{alerts.length}</p>
+            )}
           </CardContent>
         </Card>
       </div>
@@ -227,7 +214,24 @@ export default function WatchlistPage() {
         ))}
       </div>
 
-      {alerts.length === 0 ? (
+      {firstLoad ? (
+        <div className="space-y-3">
+          <AlertCardSkeleton />
+          <AlertCardSkeleton />
+          <AlertCardSkeleton />
+        </div>
+      ) : feed.error && !denied ? (
+        <Card>
+          <CardContent className="py-12 text-center">
+            <p className="font-medium">Could not load the watchlist</p>
+            <p className="text-sm text-muted-foreground mt-1">{feed.error}</p>
+            <Button variant="outline" size="sm" className="mt-3" onClick={load}>
+              <RefreshCw className="h-4 w-4 mr-2" />
+              Try again
+            </Button>
+          </CardContent>
+        </Card>
+      ) : alerts.length === 0 ? (
         <Card>
           <CardContent className="py-16 text-center">
             <CheckCircle2 className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
@@ -247,7 +251,7 @@ export default function WatchlistPage() {
             <AlertCard
               key={alert.id}
               alert={alert}
-              mine={alert.actor_id === user.id}
+              mine={alert.actor_id === user?.id}
               onReview={() => {
                 setReviewing(alert);
                 setNote('');
@@ -289,6 +293,31 @@ export default function WatchlistPage() {
         </DialogContent>
       </Dialog>
     </div>
+  );
+}
+
+/** Same shape as a real alert, so the list does not jump when data lands. */
+function AlertCardSkeleton() {
+  return (
+    <Card>
+      <CardHeader className="pb-3">
+        <div className="flex items-start justify-between gap-2">
+          <div className="space-y-2 flex-1">
+            <Skeleton className="h-5 w-2/3" />
+            <Skeleton className="h-4 w-1/2" />
+          </div>
+          <Skeleton className="h-6 w-24" />
+        </div>
+      </CardHeader>
+      <CardContent className="pt-0">
+        <Skeleton className="h-16 w-full" />
+        <Separator className="my-3" />
+        <div className="flex items-center justify-between">
+          <Skeleton className="h-4 w-32" />
+          <Skeleton className="h-8 w-20" />
+        </div>
+      </CardContent>
+    </Card>
   );
 }
 

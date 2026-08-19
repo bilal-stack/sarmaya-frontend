@@ -20,7 +20,7 @@
  * slowest lands (188ms). One panel failing costs one card, not the page.
  */
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/auth-context';
 import { API_ENDPOINTS } from '@/lib/api-config';
@@ -68,8 +68,15 @@ export default function ControlRoomPage() {
     controlRoom, bottlenecks, exceptions, overrides, evidence, reconciliation, autopilot,
   ].some((p) => p.loading);
 
-  // Deliberately no full-page spinner. The heading, the layout and every card
-  // frame are correct before any request returns, so the page never jumps.
+  // Send an unauthenticated visitor to sign in. Dropping this when the page
+  // moved to per-panel loading turned "not signed in" into a blank screen —
+  // the panels never load without a token, so nothing would ever appear.
+  useEffect(() => {
+    if (!authLoading && !user) router.push('/login');
+  }, [authLoading, user, router]);
+
+  // Deliberately no full-page spinner otherwise. The heading, the layout and
+  // every card frame are correct before any request returns, so nothing jumps.
   if (!authLoading && !user) return null;
 
   return (
@@ -100,7 +107,7 @@ export default function ControlRoomPage() {
           ? 'border-primary/40' : undefined
       }>
         <CardContent className="py-6">
-          {controlRoom.loading ? (
+          {controlRoom.loading && !controlRoom.data ? (
             <div className="flex items-end justify-between gap-4">
               <div className="space-y-2">
                 <Skeleton className="h-4 w-24" />
@@ -143,7 +150,7 @@ export default function ControlRoomPage() {
 
       {/* Why. */}
       <div className="mt-6 space-y-2">
-        {controlRoom.loading ? (
+        {controlRoom.loading && !controlRoom.data ? (
           <>
             <StuckRowSkeleton />
             <StuckRowSkeleton />
@@ -435,9 +442,14 @@ function Panel({
   icon: React.ReactNode;
   title: string;
   description: string;
-  state: { loading: boolean; error: string | null; reload: () => void };
+  state: { loading: boolean; error: string | null; data: unknown; reload: () => void };
   children: React.ReactNode;
 }) {
+  // Skeleton only when there is nothing to show yet. On a refresh the figures
+  // stay put and the small header spinner does the talking — blanking numbers
+  // somebody is reading, to replace them with the same numbers, is a flicker
+  // that makes the page feel less trustworthy rather than more current.
+  const firstLoad = state.loading && state.data === null;
   return (
     <Card>
       <CardHeader className="pb-3">
@@ -451,7 +463,7 @@ function Panel({
         <CardDescription>{description}</CardDescription>
       </CardHeader>
       <CardContent>
-        {state.loading ? (
+        {firstLoad ? (
           <div className="space-y-2 py-2">
             <Skeleton className="h-4 w-3/4" />
             <Skeleton className="h-4 w-1/2" />
