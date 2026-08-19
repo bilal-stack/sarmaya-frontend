@@ -83,6 +83,12 @@ export const API_ENDPOINTS = {
     CANCEL_BANK_CHANGE: (id: string) =>
       `${API_BASE_URL}/vendors/bank-changes/${id}/cancel`,
   },
+  // Change watchlist: the three kinds of change that move money or move the
+  // rules without touching an invoice. Needs watchlist.view.
+  WATCHLIST: {
+    LIST: `${API_BASE_URL}/watchlist`,
+    ACKNOWLEDGE: (id: string) => `${API_BASE_URL}/watchlist/${id}/acknowledge`,
+  },
   CONFIG: {
     APPROVAL_POLICIES: `${API_BASE_URL}/config/approval-policies`,
     SIMULATE: `${API_BASE_URL}/config/approval-policies/simulate`,

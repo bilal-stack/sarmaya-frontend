@@ -11,7 +11,7 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { FileText, Upload, Bot, MessageSquare, ScanSearch, ArrowRight, Loader2, Inbox, Building2, Bot as BotIcon, Scale, UserCheck, ShieldCheck, ShoppingCart, Banknote, Landmark, ClipboardList, Gavel, Users } from 'lucide-react';
+import { FileText, Upload, Bot, MessageSquare, ScanSearch, ArrowRight, Loader2, Inbox, Building2, Bot as BotIcon, Scale, UserCheck, ShieldCheck, ShoppingCart, Banknote, Landmark, ClipboardList, Gavel, Users, Eye } from 'lucide-react';
 import Link from 'next/link';
 
 const tools = [
@@ -26,6 +26,13 @@ const tools = [
     description: 'Verify vendors that are blocking invoice approvals, ordered by the value each is holding up.',
     icon: <Building2 className="h-8 w-8 text-primary" />,
     link: '/ai-tools/vendors',
+  },
+  {
+    name: 'Change Watchlist',
+    description:
+      'Bank changes, vendor master edits and policy changes each move money or move the rules without touching an invoice, so nothing else surfaces them. Every one gets a second pair of eyes, recorded.',
+    icon: <Eye className="h-8 w-8 text-primary" />,
+    link: '/ai-tools/watchlist',
   },
   {
     name: 'Vendor Bank Changes',
