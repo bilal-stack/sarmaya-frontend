@@ -3,6 +3,7 @@ import { GalsiLogo } from '@/components/auth/galsi-logo';
 import { ActiveLink } from '@/components/navigation/active-link';
 
 import { UserNavLoader } from '@/components/header/user-nav-loader';
+import { NotificationBell } from '@/components/notification-bell';
 
 const navLinks = [
     { href: "/ai-tools", label: "AI Tools" }
@@ -24,7 +25,8 @@ export function Header() {
             <ActiveLink key={link.href} href={link.href} label={link.label} />
           ))}
         </nav>
-        <div className="flex flex-1 items-center justify-end">
+        <div className="flex flex-1 items-center justify-end gap-1">
+          <NotificationBell />
           <UserNavLoader />
         </div>
       </div>

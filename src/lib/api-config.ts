@@ -97,6 +97,11 @@ export const API_ENDPOINTS = {
     QUEUE: `${API_BASE_URL}/notifications/queue`,
     SUMMARY: `${API_BASE_URL}/notifications/queue/summary`,
     RETRY_FAILED: `${API_BASE_URL}/notifications/queue/retry-failed`,
+    // Your own notifications. Scoped to the caller server-side, so there is
+    // no id to pass and no way to point these at somebody else.
+    MINE: `${API_BASE_URL}/notifications/mine`,
+    MARK_READ: (id: string) => `${API_BASE_URL}/notifications/mine/${id}/read`,
+    MARK_ALL_READ: `${API_BASE_URL}/notifications/mine/read-all`,
   },
   CONFIG: {
     APPROVAL_POLICIES: `${API_BASE_URL}/config/approval-policies`,

@@ -38,3 +38,24 @@ export interface DispatchResult {
 }
 
 export type QueueSummary = Record<QueueStatus, number>;
+
+
+/**
+ * One thing you were told. Yours only — the API scopes these to the caller,
+ * and there is no role that grants reading somebody else's.
+ */
+export interface MyNotification {
+  id: string;
+  subject: string;
+  body: string;
+  category: string | null;
+  /** Where it points. The Decision Inbox stays the system of record. */
+  link: string | null;
+  read_at: string | null;
+  created_at: string;
+}
+
+export interface MyNotificationFeed {
+  unread: number;
+  items: MyNotification[];
+}
