@@ -4,14 +4,8 @@ import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/auth-context';
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { FileText, Upload, Bot, MessageSquare, ScanSearch, ArrowRight, Loader2, Inbox, Building2, Bot as BotIcon, Scale, UserCheck, ShieldCheck, ShoppingCart, Banknote, Landmark, ClipboardList, Gavel, Users, Eye, Mail, Gauge } from 'lucide-react';
+  Card, CardContent, CardDescription, CardHeader, CardTitle, } from '@/components/ui/card'; import { Button } from '@/components/ui/button'; import {   FileText, Upload, Bot, MessageSquare, ScanSearch, ArrowRight, Loader2, Inbox, Building2, Bot as BotIcon, Scale, UserCheck, ShieldCheck, ShoppingCart, Banknote, Landmark, ClipboardList, Gavel, Users, Eye, Mail, Gauge, Network, Activity, Boxes, Users2, Plug,
+} from 'lucide-react';
 import Link from 'next/link';
 
 const tools = [
@@ -33,6 +27,41 @@ const tools = [
     description: 'Verify vendors that are blocking invoice approvals, ordered by the value each is holding up.',
     icon: <Building2 className="h-8 w-8 text-primary" />,
     link: '/ai-tools/vendors',
+  },
+  {
+    name: 'People',
+    description:
+      'Who works here, who is joining, and what is waiting on a signature. Pay and identifiers are masked unless your role is trusted with them, and nobody signs their own rise — or their own manager’s.',
+    icon: <Users2 className="h-8 w-8 text-primary" />,
+    link: '/ai-tools/hr',
+  },
+  {
+    name: 'Inventory',
+    description:
+      'What is on hand, and why. Every balance is the sum of its movements rather than a number somebody edited — and an adjustment, the one way stock changes with no delivery behind it, needs a second pair of eyes.',
+    icon: <Boxes className="h-8 w-8 text-primary" />,
+    link: '/ai-tools/inventory',
+  },
+  {
+    name: 'Org Units & Scopes',
+    description:
+      'A role says what somebody may do; it has never said what they may do it to. Assign a business unit, location or cost centre and they see that unit and everything beneath it — with no scope meaning the whole tenant, as before.',
+    icon: <Network className="h-8 w-8 text-primary" />,
+    link: '/ai-tools/org-units',
+  },
+  {
+    name: 'System Health',
+    description:
+      'Whether the scheduled work is actually running. A job that stops raises nothing anywhere, so the only signal is how long it has been since it last ran — this is where that shows.',
+    icon: <Activity className="h-8 w-8 text-primary" />,
+    link: '/ai-tools/system',
+  },
+  {
+    name: 'Accounting System',
+    description:
+      'Connect QuickBooks and released payments post to your own books as journal entries — after the money moves, never before. When a connection dies nothing errors; entries just stop arriving, so this is where that shows.',
+    icon: <Plug className="h-8 w-8 text-primary" />,
+    link: '/ai-tools/system/integrations',
   },
   {
     name: 'Change Watchlist',

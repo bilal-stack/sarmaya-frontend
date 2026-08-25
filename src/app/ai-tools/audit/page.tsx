@@ -16,6 +16,7 @@ import { useAuth } from '@/context/auth-context';
 import { useToast } from '@/hooks/use-toast';
 import { API_ENDPOINTS, apiFetch } from '@/lib/api-config';
 import { parseApiDate } from '@/lib/datetime';
+import { downloadWithAuth } from '@/lib/download';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -24,8 +25,7 @@ import { Label } from '@/components/ui/label';
 import { Separator } from '@/components/ui/separator';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
-  Loader2, ShieldCheck, Bot, FileArchive, AlertTriangle, CheckCircle2,
-  UserCog, Lock, Search, PackagePlus, Scale,
+  Loader2, ShieldCheck, Bot, FileArchive, AlertTriangle, CheckCircle2, UserCog, Lock, Search, PackagePlus, Scale, Download,
 } from 'lucide-react';
 import { format } from 'date-fns';
 
@@ -120,6 +120,7 @@ function AuditConsole() {
   const [preview, setPreview] = useState<EvidencePack | null>(null);
   const [isPreviewing, setIsPreviewing] = useState(false);
   const [isSealing, setIsSealing] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
 
   const load = useCallback(async () => {
     if (authLoading) return;
@@ -197,6 +198,26 @@ function AuditConsole() {
       toast({ variant: 'destructive', title: 'Could not seal', description: error.message });
     } finally {
       setIsSealing(false);
+    }
+  };
+
+  const downloadPack = async (format: 'html' | 'json') => {
+    if (!user?.access_token || !preview) return;
+    setIsDownloading(true);
+    try {
+      await downloadWithAuth(
+        API_ENDPOINTS.AUDIT.EVIDENCE_PACK_EXPORT(preview.correlation_id, format),
+        user.access_token,
+        `evidence-pack-${preview.correlation_id}.${format}`,
+      );
+    } catch (error: any) {
+      toast({
+        variant: 'destructive',
+        title: 'Could not download',
+        description: error.message,
+      });
+    } finally {
+      setIsDownloading(false);
     }
   };
 
@@ -494,14 +515,43 @@ function AuditConsole() {
                       <p className="text-xs font-mono break-all mt-0.5">{preview.pack_hash}</p>
                     </div>
 
-                    <Button onClick={seal} disabled={isSealing}>
-                      {isSealing ? (
-                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      ) : (
-                        <PackagePlus className="h-4 w-4 mr-2" />
-                      )}
-                      Seal this pack
-                    </Button>
+                    <div className="flex flex-wrap gap-2">
+                      <Button onClick={seal} disabled={isSealing}>
+                        {isSealing ? (
+                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        ) : (
+                          <PackagePlus className="h-4 w-4 mr-2" />
+                        )}
+                        Seal this pack
+                      </Button>
+                      {/* Downloading is a view of the bundle, not a sealing —
+                          so it stays a separate action, and refreshing a
+                          download never adds to the register of packs. */}
+                      <Button
+                        variant="outline"
+                        onClick={() => downloadPack('html')}
+                        disabled={isDownloading}
+                      >
+                        {isDownloading ? (
+                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        ) : (
+                          <Download className="h-4 w-4 mr-2" />
+                        )}
+                        Download
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        onClick={() => downloadPack('json')}
+                        disabled={isDownloading}
+                      >
+                        JSON
+                      </Button>
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      The hash above seals the JSON bundle, not the page. The
+                      downloaded document embeds that bundle verbatim, so the
+                      hash can be recomputed from the file itself.
+                    </p>
                   </div>
                 </>
               )}
