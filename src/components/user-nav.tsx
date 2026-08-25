@@ -30,17 +30,28 @@ function getInitials(fullName: string | null | undefined) {
 
 export function UserNav() {
   const { user, logout, isLoading } = useAuth();
-  
+
+  // Above the early returns, not below them. React identifies hooks by call
+  // order, so a useMemo that only runs once `user` has loaded means the first
+  // render registers fewer hooks than the second — and React throws "rendered
+  // more hooks than during the previous render" the moment isLoading flips.
+  // Both memos therefore have to tolerate `user` being null.
+  const initials = useMemo(
+    () => (user ? getInitials(user.full_name) : ''),
+    [user],
+  );
+  const avatarSrc = useMemo(
+    () => (user ? `https://picsum.photos/seed/${user.id}/40/40` : ''),
+    [user],
+  );
+
   if (isLoading) {
     return <Skeleton className="h-8 w-8 rounded-full" />;
   }
-  
+
   if (!user) {
     return null;
   }
-  
-  const initials = useMemo(() => getInitials(user.full_name), [user.full_name]);
-  const avatarSrc = useMemo(() => `https://picsum.photos/seed/${user.id}/40/40`, [user.id]);
 
   return (
     <DropdownMenu>
