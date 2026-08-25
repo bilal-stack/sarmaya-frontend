@@ -41,6 +41,16 @@ export function usePanel<T>(url: string, reloadKey: number = 0): PanelState<T> {
   const [status, setStatus] = useState<number | null>(null);
 
   const load = useCallback(async () => {
+    // A panel whose subject has not been chosen yet passes an empty url. Left
+    // unguarded that fetches the page's own address and parses the HTML as
+    // JSON, which surfaces as a mystified parse error rather than as "nothing
+    // is selected".
+    if (!url) {
+      setData(null);
+      setStatus(null);
+      setLoading(false);
+      return;
+    }
     if (authLoading || !user?.access_token) return;
     setLoading(true);
     setError(null);

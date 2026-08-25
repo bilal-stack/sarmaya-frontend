@@ -64,6 +64,11 @@ export const API_ENDPOINTS = {
     // GET previews the bundle without recording it; POST seals and records it.
     EVIDENCE_PACK: (correlationId: string) => `${API_BASE_URL}/audit/evidence-pack/${correlationId}`,
     EVIDENCE_PACKS: `${API_BASE_URL}/audit/evidence-packs`,
+    // The pack as a file. html is readable and prints to PDF; json is the
+    // canonical bundle. The hash seals the JSON, and the html embeds that
+    // JSON verbatim so the seal can be recomputed from the file itself.
+    EVIDENCE_PACK_EXPORT: (correlationId: string, format: 'html' | 'json' = 'html') =>
+      `${API_BASE_URL}/audit/evidence-pack/${correlationId}/export?format=${format}`,
   },
   VENDORS: {
     LIST: `${API_BASE_URL}/vendors`,
@@ -117,6 +122,105 @@ export const API_ENDPOINTS = {
     RUN: `${API_BASE_URL}/autopilot/run`,
     REVERT: (id: string) => `${API_BASE_URL}/autopilot/${id}/revert`,
   },
+  // HR (Build Book Variant C). Salary, national ID and bank details come back
+  // masked unless the caller holds hr.view_compensation — the keys are present
+  // either way, so nothing has to branch on which shape it received.
+  HR: {
+    EMPLOYEES: `${API_BASE_URL}/hr/employees`,
+    EMPLOYEE: (id: string) => `${API_BASE_URL}/hr/employees/${id}`,
+    LINK_USER: (id: string) => `${API_BASE_URL}/hr/employees/${id}/user`,
+    SET_STATUS: (id: string) => `${API_BASE_URL}/hr/employees/${id}/status`,
+    TASKS: (id: string) => `${API_BASE_URL}/hr/employees/${id}/tasks`,
+    CHECKLIST: (id: string) => `${API_BASE_URL}/hr/employees/${id}/checklist`,
+    TASK_STATUS: (taskId: string) => `${API_BASE_URL}/hr/tasks/${taskId}/status`,
+    // Who has left and can still sign in — the question an auditor asks.
+    OUTSTANDING_ACCESS: `${API_BASE_URL}/hr/outstanding-access`,
+    ONBOARDING_COMPLETION: `${API_BASE_URL}/hr/onboarding-completion`,
+    HEADCOUNT: `${API_BASE_URL}/hr/headcount`,
+    HEADCOUNT_ACTION: (id: string, action: string) =>
+      `${API_BASE_URL}/hr/headcount/${id}/${action}`,
+    HEADCOUNT_PLAN: `${API_BASE_URL}/hr/headcount-plan`,
+    PAYROLL_CHANGES: `${API_BASE_URL}/hr/payroll-changes`,
+    PAYROLL_ACTION: (id: string, action: string) =>
+      `${API_BASE_URL}/hr/payroll-changes/${id}/${action}`,
+    EXPENSES: `${API_BASE_URL}/hr/expenses`,
+    EXPENSE_APPROVE: (id: string) => `${API_BASE_URL}/hr/expenses/${id}/approve`,
+    EXPENSE_ACTION: (id: string, action: string) =>
+      `${API_BASE_URL}/hr/expenses/${id}/${action}`,
+  },
+  // Inventory (Build Book Variant D1). Stock is a ledger: MOVEMENTS is why a
+  // balance is what it is, which a stored quantity can never answer.
+  INVENTORY: {
+    ITEMS: `${API_BASE_URL}/inventory/items`,
+    ITEM: (id: string) => `${API_BASE_URL}/inventory/items/${id}`,
+    LOCATIONS: `${API_BASE_URL}/inventory/locations`,
+    STOCK: `${API_BASE_URL}/inventory/stock`,
+    MOVEMENTS: `${API_BASE_URL}/inventory/movements`,
+    RECONCILE: `${API_BASE_URL}/inventory/reconcile`,
+    ADJUSTMENTS: `${API_BASE_URL}/inventory/adjustments`,
+    ADJUSTMENT: (id: string) => `${API_BASE_URL}/inventory/adjustments/${id}`,
+    // One route for both signatures — the server decides whether a call is the
+    // first or the second, so a client can never supply the second alone.
+    ADJUSTMENT_ACTION: (id: string, action: string) =>
+      `${API_BASE_URL}/inventory/adjustments/${id}/${action}`,
+    RETURNS: `${API_BASE_URL}/inventory/returns`,
+    RETURN_ACTION: (id: string, action: string) =>
+      `${API_BASE_URL}/inventory/returns/${id}/${action}`,
+    UNINSPECTED: `${API_BASE_URL}/inventory/uninspected`,
+    QUALITY_CHECK: (lineId: string) =>
+      `${API_BASE_URL}/inventory/receipt-lines/${lineId}/quality-check`,
+    EXCEPTION: (lineId: string) =>
+      `${API_BASE_URL}/inventory/receipt-lines/${lineId}/exception`,
+  },
+  // Org units and the scopes a role is exercised within. A user with no scope
+  // assigned sees the whole tenant, which is the default until one is given —
+  // so an empty list here means unrestricted, not "nothing".
+  ORG_UNITS: {
+    LIST: `${API_BASE_URL}/org-units`,
+    CREATE: `${API_BASE_URL}/org-units`,
+    SCOPES: (userId: string) => `${API_BASE_URL}/org-units/users/${userId}/scopes`,
+    ASSIGN: (userId: string) => `${API_BASE_URL}/org-units/users/${userId}/scopes`,
+    REVOKE: (userId: string, unitId: string) =>
+      `${API_BASE_URL}/org-units/users/${userId}/scopes/${unitId}`,
+  },
+  // The admin console's error monitor. Leads with whether the scheduled jobs
+  // are running at all, because a job that stopped raises nothing anywhere.
+  SYSTEM: {
+    HEALTH: `${API_BASE_URL}/system/health`,
+  },
+  // The tenant's own accounting system. Sarmaya pushes journal entries out
+  // after money has moved and pulls the chart of accounts and party list back
+  // on demand — never a continuous two-way sync. See DR-049.
+  INTEGRATIONS: {
+    // Returns { authorization_url }. Navigate there with window.location.href,
+    // NOT apiFetch: the browser has to actually leave the app for Intuit's
+    // consent screen, and a redirect followed inside fetch is swallowed.
+    CONNECT: (provider: string) =>
+      `${API_BASE_URL}/integrations/${provider}/connect`,
+    DISCONNECT: (provider: string) =>
+      `${API_BASE_URL}/integrations/${provider}/disconnect`,
+    // Re-pulls accounts and parties. A wholesale replace, not a merge.
+    REFRESH: (provider: string) =>
+      `${API_BASE_URL}/integrations/${provider}/refresh`,
+    STATUS: (provider: string) =>
+      `${API_BASE_URL}/integrations/${provider}/status`,
+    // Which accounts a posted entry debits and credits. Nothing posts until
+    // these are set — the backend treats an unconfigured connection the same
+    // as no connection at all.
+    DEFAULT_ACCOUNTS: (provider: string) =>
+      `${API_BASE_URL}/integrations/${provider}/default-accounts`,
+    ACCOUNTS: (provider: string) =>
+      `${API_BASE_URL}/integrations/${provider}/accounts`,
+    PARTIES: (provider: string, type?: string) =>
+      `${API_BASE_URL}/integrations/${provider}/parties${type ? `?type=${type}` : ''}`,
+    MAP_VENDOR: (provider: string, vendorId: string) =>
+      `${API_BASE_URL}/integrations/${provider}/vendors/${vendorId}/map`,
+    // The outbound queue. `status=failed` is the dead-letter view.
+    POSTS: (provider: string, status?: string) =>
+      `${API_BASE_URL}/integrations/${provider}/posts${status ? `?status=${status}` : ''}`,
+    RETRY_POST: (provider: string, postId: string) =>
+      `${API_BASE_URL}/integrations/${provider}/posts/${postId}/retry`,
+  },
   USERS: {
     // Directory for the delegate picker; requires users.view.
     LIST: `${API_BASE_URL}/users`,
@@ -134,6 +238,20 @@ export const API_ENDPOINTS = {
     EVIDENCE: `${API_BASE_URL}/dashboard/evidence`,
     RECONCILIATION_HEALTH: `${API_BASE_URL}/dashboard/reconciliation-health`,
     AUTOPILOT_HEALTH: `${API_BASE_URL}/dashboard/autopilot-health`,
+    // Variant D reports.
+    STOCK_ACCURACY: `${API_BASE_URL}/dashboard/stock-accuracy`,
+    SUPPLIER_PERFORMANCE: `${API_BASE_URL}/dashboard/supplier-performance`,
+    RECEIPT_TO_INVOICE: `${API_BASE_URL}/dashboard/receipt-to-invoice`,
+    // Variant C reports.
+    HIRING_PIPELINE: `${API_BASE_URL}/dashboard/hiring-pipeline`,
+    PAYROLL_VARIANCE: `${API_BASE_URL}/dashboard/payroll-variance`,
+    EXPENSE_EXCEPTIONS: `${API_BASE_URL}/dashboard/expense-exceptions`,
+    // Any of the seven as a file. csv carries one table (the report's largest
+    // unless `table` names another); html carries the whole report and prints
+    // to PDF from any browser.
+    EXPORT: (report: string, format: 'csv' | 'html' | 'json' = 'csv', table?: string) =>
+      `${API_BASE_URL}/dashboard/${report}/export?format=${format}`
+      + (table ? `&table=${encodeURIComponent(table)}` : ''),
     // Headline figures: pending approvals, this month's volume, top vendors.
     STATS: `${API_BASE_URL}/dashboard/stats`,
     // The pending invoices themselves, so the count is actionable rather than

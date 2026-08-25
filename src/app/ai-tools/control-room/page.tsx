@@ -36,8 +36,14 @@ import { Separator } from '@/components/ui/separator';
 import { Progress } from '@/components/ui/progress';
 import { Skeleton } from '@/components/ui/skeleton';
 import {
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
+  DropdownMenuSeparator, DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { downloadWithAuth } from '@/lib/download';
+import { useToast } from '@/hooks/use-toast';
+import {
   Loader2, RefreshCw, ArrowRight, AlertTriangle, Timer, ShieldAlert,
-  Landmark, Bot, FileWarning, TrendingUp, Gauge,
+  Landmark, Bot, FileWarning, TrendingUp, Gauge, Download,
 } from 'lucide-react';
 
 const money = (n: number) =>
@@ -49,6 +55,31 @@ const peak = (values: number[]) => Math.max(1, ...values);
 export default function ControlRoomPage() {
   const router = useRouter();
   const { user, isLoading: authLoading } = useAuth();
+  const { toast } = useToast();
+  const [downloading, setDownloading] = useState(false);
+
+  // The figures are recomputed server-side for the file rather than dumped
+  // from what this page happens to be holding: a report somebody files should
+  // not depend on how stale the tab was when they clicked.
+  const download = async (format: 'csv' | 'html') => {
+    if (!user?.access_token) return;
+    setDownloading(true);
+    try {
+      await downloadWithAuth(
+        API_ENDPOINTS.DASHBOARD.EXPORT('control-room', format),
+        user.access_token,
+        `control-room.${format}`,
+      );
+    } catch (error: any) {
+      toast({
+        variant: 'destructive',
+        title: 'Could not download',
+        description: error.message,
+      });
+    } finally {
+      setDownloading(false);
+    }
+  };
 
   // One counter, bumped by Refresh, that every panel watches. Each reloads
   // itself rather than the page re-mounting and blanking what is already there.
@@ -91,14 +122,46 @@ export default function ControlRoomPage() {
             What is stuck, why, and what it is worth.
           </p>
         </div>
-        <Button
-          variant="outline" size="sm"
-          onClick={() => setReloadKey((k) => k + 1)}
-          disabled={anyLoading}
-        >
-          <RefreshCw className={`h-4 w-4 mr-2 ${anyLoading ? 'animate-spin' : ''}`} />
-          Refresh
-        </Button>
+        <div className="flex items-center gap-2">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="sm" disabled={downloading}>
+                {downloading
+                  ? <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  : <Download className="h-4 w-4 mr-2" />}
+                Export
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-64">
+              <DropdownMenuLabel>Download this report</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => download('csv')}>
+                <div>
+                  <p className="font-medium">Spreadsheet (CSV)</p>
+                  <p className="text-xs text-muted-foreground">
+                    What is stuck, as rows.
+                  </p>
+                </div>
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => download('html')}>
+                <div>
+                  <p className="font-medium">Document</p>
+                  <p className="text-xs text-muted-foreground">
+                    The whole report. Print to PDF from your browser.
+                  </p>
+                </div>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+          <Button
+            variant="outline" size="sm"
+            onClick={() => setReloadKey((k) => k + 1)}
+            disabled={anyLoading}
+          >
+            <RefreshCw className={`h-4 w-4 mr-2 ${anyLoading ? 'animate-spin' : ''}`} />
+            Refresh
+          </Button>
+        </div>
       </div>
 
       {/* The one number. */}

@@ -1,0 +1,45 @@
+name: CI
+
+# The frontend's only mechanical check was `tsc --noEmit`, run by hand. That
+# misses a whole class of failure that only appears at build time — a client
+# component reading useSearchParams outside a Suspense boundary typechecks
+# perfectly and fails the production build — so both run here.
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  frontend:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+
+      # `npm ci` rather than `npm install`: it installs exactly what
+      # package-lock.json pins and fails if the lockfile and package.json have
+      # drifted apart, which is the point of having a lockfile at all.
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Typecheck
+        run: npx tsc --noEmit
+
+      - name: Build
+        # NEXT_PUBLIC_* values are inlined at build time, so one is needed for
+        # the build to complete. It is not the deployed value and does not have
+        # to be reachable — nothing here makes a request. The real URL is set
+        # in the hosting environment.
+        env:
+          NEXT_PUBLIC_API_BASE_URL: http://localhost:8000/api/v1
+        run: npx next build
