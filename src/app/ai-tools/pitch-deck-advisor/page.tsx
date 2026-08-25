@@ -360,7 +360,7 @@ const ChatInterface = ({ tab }: { tab: string }) => {
 
         buffer += decoder.decode(value, { stream: true });
         
-        let boundary = buffer.lastIndexOf('\n');
+        const boundary = buffer.lastIndexOf('\n');
         if (boundary === -1) continue;
 
         const completeChunks = buffer.substring(0, boundary);

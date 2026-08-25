@@ -64,7 +64,8 @@ export function NextActionCard({ invoiceId, onAction, isBusy }: Props) {
   const load = useCallback(
     async (useAi: boolean) => {
       if (!user?.access_token) return;
-      useAi ? setIsEnriching(true) : setIsLoading(true);
+      if (useAi) setIsEnriching(true);
+      else setIsLoading(true);
       setError(null);
       try {
         const response = await apiFetch(

@@ -1221,7 +1221,7 @@ export default function LifeScienceChatbotPage() {
         buffer += decoder.decode(value, { stream: true });
         
         // Process line by line
-        let boundary = buffer.lastIndexOf('\n');
+        const boundary = buffer.lastIndexOf('\n');
         if (boundary === -1) continue;
 
         const completeLines = buffer.substring(0, boundary);

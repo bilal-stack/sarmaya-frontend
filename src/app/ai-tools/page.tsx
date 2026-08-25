@@ -132,7 +132,7 @@ const tools = [
     link: '/ai-tools/autopilot',
   },
   {
-    name: 'People',
+    name: 'Users & Access',
     description: 'Who has access and what each of them may do. Accounts are granted here — self-registration is closed, so authority is handed out by someone accountable for it.',
     icon: <Users className="h-8 w-8 text-primary" />,
     link: '/ai-tools/users',
@@ -213,7 +213,12 @@ export default function AiToolsPage() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 w-full max-w-7xl">
         {tools.map((tool) => (
           <Card
-            key={tool.name}
+            // The destination, not the label: two cards were both called
+            // "People" (employees, and user accounts) which collided as a key
+            // and let React drop or duplicate one of them. A link is unique by
+            // construction — two cards pointing at the same page would be the
+            // actual mistake.
+            key={tool.link}
             className="flex flex-col border-border/50 shadow-xl shadow-black/20 hover:border-primary/80 transition-all duration-300 ease-in-out transform hover:-translate-y-1"
           >
             <CardHeader className="items-start">

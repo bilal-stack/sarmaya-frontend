@@ -30,17 +30,41 @@ function getInitials(fullName: string | null | undefined) {
 
 export function UserNav() {
   const { user, logout, isLoading } = useAuth();
-  
+
+  // Above the early returns, not below them. React identifies hooks by call
+  // order, so a useMemo that only runs once `user` has loaded means the first
+  // render registers fewer hooks than the second — and React throws "rendered
+  // more hooks than during the previous render" the moment isLoading flips.
+  // Both memos therefore have to tolerate `user` being null.
+  // Above the early returns, not below them. React identifies hooks by call
+  // order, so a useMemo reached only once `user` has loaded registers fewer
+  // hooks on a render that returned early than on one that did not — and React
+  // refuses that with "rendered more hooks than during the previous render".
+  //
+  // Today it is masked rather than firing: UserNav is a next/dynamic import,
+  // so its chunk lands after the auth context has already read localStorage
+  // and flipped isLoading to false, and the early return is almost never taken
+  // on a first render. Confirmed by putting the hooks back below the returns
+  // and failing to reproduce a crash. That makes this a latent violation, not
+  // a live bug — it starts firing the day the dynamic import is dropped or the
+  // session check becomes genuinely async. Both memos therefore tolerate a
+  // null user and sit where their order cannot change.
+  const initials = useMemo(
+    () => (user ? getInitials(user.full_name) : ''),
+    [user],
+  );
+  const avatarSrc = useMemo(
+    () => (user ? `https://picsum.photos/seed/${user.id}/40/40` : ''),
+    [user],
+  );
+
   if (isLoading) {
     return <Skeleton className="h-8 w-8 rounded-full" />;
   }
-  
+
   if (!user) {
     return null;
   }
-  
-  const initials = useMemo(() => getInitials(user.full_name), [user.full_name]);
-  const avatarSrc = useMemo(() => `https://picsum.photos/seed/${user.id}/40/40`, [user.id]);
 
   return (
     <DropdownMenu>

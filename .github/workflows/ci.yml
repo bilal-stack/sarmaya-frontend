@@ -32,6 +32,13 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Lint
+        # Warnings do not fail this. The config is narrow on purpose (see
+        # eslint.config.mjs) so the first run passes on the existing codebase
+        # — a linter that demands three hundred edits on day one is a linter
+        # somebody switches off, and then it catches nothing at all.
+        run: npm run lint
+
       - name: Typecheck
         run: npx tsc --noEmit
 
