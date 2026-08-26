@@ -239,6 +239,12 @@ export const API_ENDPOINTS = {
     // and an action they were refused. Expect a 403 for ordinary roles on a
     // page they can otherwise see.
     SOD_VIOLATIONS: `${API_BASE_URL}/dashboard/sod-violations`,
+    // AP / Treasury. PAYMENT_RUN_STATUS reads with payments.view, not the
+    // dashboard permission — a manager and an approver can open every invoice
+    // it touches and cannot open a payment run, so expect a 403 for them.
+    INVOICE_THROUGHPUT: `${API_BASE_URL}/dashboard/invoice-throughput`,
+    PAYMENT_RUN_STATUS: `${API_BASE_URL}/dashboard/payment-run-status`,
+    DUPLICATE_ANOMALY: `${API_BASE_URL}/dashboard/duplicate-anomaly`,
     EVIDENCE: `${API_BASE_URL}/dashboard/evidence`,
     RECONCILIATION_HEALTH: `${API_BASE_URL}/dashboard/reconciliation-health`,
     AUTOPILOT_HEALTH: `${API_BASE_URL}/dashboard/autopilot-health`,

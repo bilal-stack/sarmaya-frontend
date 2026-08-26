@@ -54,6 +54,65 @@ export interface ExceptionsHeatmap {
   by_vendor: Array<{ vendor: string; count: number }>;
 }
 
+export interface InvoiceThroughput {
+  window_days: number;
+  captured: number;
+  settled: number;
+  capture_to_paid_hours: { mean: number | null; median: number | null };
+  rework_events: number;
+  /** One invoice rejected three times is three events and one affected
+   *  invoice. The rate below is over invoices, so it stays readable. */
+  invoices_reworked: number;
+  rework_rate_pct: number;
+  rework_drivers: Array<{ reason: string; count: number }>;
+  /** Always null. Three-way match is computed on demand and never stored, so
+   *  what an invoice matched when it was approved cannot be recovered. */
+  match_rate_pct: number | null;
+}
+
+export interface PaymentRunStatus {
+  window_days: number;
+  by_state: Array<{ state: string; count: number; value: number }>;
+  awaiting_bank_file: Array<{
+    payment_number: string;
+    value: number;
+    released_at: string | null;
+  }>;
+  unreconciled_after_release: Array<{
+    payment_number: string;
+    value: number;
+    released_at: string | null;
+    age_days: number | null;
+  }>;
+  rejected: Array<{
+    payment_number: string;
+    value: number;
+    reason: string | null;
+  }>;
+  /** Figures the system deliberately does not report, with the reason. A zero
+   *  would be read as "none failed" rather than "we cannot see". */
+  not_reported: { failed: string; reissued: string };
+}
+
+export interface DuplicateAnomaly {
+  window_days: number;
+  flagged: number;
+  paid_anyway: number;
+  still_held: number;
+  stopped: number;
+  /** What the flag actually held back — not a claim that each would have been
+   *  paid twice. See the service docstring. */
+  value_held_back: number;
+  value_paid_anyway: number;
+  watchlist: Array<{
+    category: string;
+    severity: string;
+    count: number;
+    acknowledged: number;
+    open: number;
+  }>;
+}
+
 /** Attempts the controls refused. Unlike every other report here, an empty
  *  result is the good outcome — see the panel's own note. */
 export interface SodViolations {
