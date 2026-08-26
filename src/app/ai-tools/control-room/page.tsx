@@ -26,7 +26,7 @@ import { useAuth } from '@/context/auth-context';
 import { API_ENDPOINTS } from '@/lib/api-config';
 import { usePanel } from '@/hooks/use-panel';
 import type {
-  ControlRoom, Bottlenecks, ExceptionsHeatmap, PolicyOverrides,
+  ControlRoom, Bottlenecks, ExceptionsHeatmap, PolicyOverrides, SodViolations,
   EvidenceCompleteness, ReconciliationHealth, AutopilotHealth, AgeBucket,
 } from '@/types/dashboards';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -89,6 +89,9 @@ export default function ControlRoomPage() {
   const bottlenecks = usePanel<Bottlenecks>(API_ENDPOINTS.DASHBOARD.BOTTLENECKS, reloadKey);
   const exceptions = usePanel<ExceptionsHeatmap>(API_ENDPOINTS.DASHBOARD.EXCEPTIONS, reloadKey);
   const overrides = usePanel<PolicyOverrides>(API_ENDPOINTS.DASHBOARD.POLICY_OVERRIDES, reloadKey);
+  // 403s for ordinary roles on a page they can otherwise read — the panel
+  // says so rather than offering a retry. See Panel's forbiddenNote.
+  const sod = usePanel<SodViolations>(API_ENDPOINTS.DASHBOARD.SOD_VIOLATIONS, reloadKey);
   const evidence = usePanel<EvidenceCompleteness>(API_ENDPOINTS.DASHBOARD.EVIDENCE, reloadKey);
   const reconciliation = usePanel<ReconciliationHealth>(
     API_ENDPOINTS.DASHBOARD.RECONCILIATION_HEALTH, reloadKey
@@ -96,7 +99,8 @@ export default function ControlRoomPage() {
   const autopilot = usePanel<AutopilotHealth>(API_ENDPOINTS.DASHBOARD.AUTOPILOT_HEALTH, reloadKey);
 
   const anyLoading = [
-    controlRoom, bottlenecks, exceptions, overrides, evidence, reconciliation, autopilot,
+    controlRoom, bottlenecks, exceptions, overrides, sod, evidence,
+    reconciliation, autopilot,
   ].some((p) => p.loading);
 
   // Send an unauthenticated visitor to sign in. Dropping this when the page
@@ -449,6 +453,60 @@ export default function ControlRoomPage() {
         </Panel>
 
         <Panel
+          icon={<ShieldAlert className="h-5 w-5 text-primary" />}
+          title="Blocked attempts"
+          description={
+            sod.data
+              ? `Refused by a control, last ${sod.data.window_days} days.`
+              : 'Refused by a control.'
+          }
+          state={sod}
+          forbiddenNote="Your role cannot see this. It names who was refused, so it reads with the audit permission rather than the dashboard one."
+        >
+          {sod.data && (
+            sod.data.total_blocked === 0 ? (
+              // Deliberately not the neutral "No results." A control that has
+              // never fired looks, from outside, exactly like a control that
+              // was never wired up, and this panel exists to tell them apart.
+              <Empty>Nothing was refused. The controls held.</Empty>
+            ) : (
+              <div className="space-y-2">
+                <div className="flex items-baseline gap-4">
+                  <div>
+                    <div className="text-2xl font-semibold">{sod.data.sod_blocked}</div>
+                    <div className="text-xs text-muted-foreground">
+                      separation of duties
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-2xl font-semibold text-muted-foreground">
+                      {sod.data.other_blocked}
+                    </div>
+                    <div className="text-xs text-muted-foreground">other gates</div>
+                  </div>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Counted apart on purpose: someone trying to approve their own
+                  invoice and someone approving one with no vendor linked are
+                  both refusals, and only one is a segregation failure.
+                </p>
+                {sod.data.by_reason.slice(0, 4).map((row) => (
+                  <div
+                    key={row.reason}
+                    className="flex items-center justify-between gap-2 text-sm"
+                  >
+                    <span className="truncate">{row.label}</span>
+                    <span className="text-muted-foreground shrink-0">
+                      {row.count}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )
+          )}
+        </Panel>
+
+        <Panel
           icon={<Bot className="h-5 w-5 text-primary" />}
           title="Autopilot health"
           description={
@@ -500,13 +558,21 @@ export default function ControlRoomPage() {
  * appear.
  */
 function Panel({
-  icon, title, description, state, children,
+  icon, title, description, state, children, forbiddenNote,
 }: {
   icon: React.ReactNode;
   title: string;
   description: string;
-  state: { loading: boolean; error: string | null; data: unknown; reload: () => void };
+  state: {
+    loading: boolean; error: string | null; data: unknown;
+    reload: () => void; status?: number | null;
+  };
   children: React.ReactNode;
+  /** Shown instead of the error-and-retry when the answer is 403. Not every
+   *  panel on this page reads with the same permission, and "you may not see
+   *  this" is a fact rather than a failure — offering somebody a retry button
+   *  for a permission they do not have makes a working page look broken. */
+  forbiddenNote?: string;
 }) {
   // Skeleton only when there is nothing to show yet. On a refresh the figures
   // stay put and the small header spinner does the talking — blanking numbers
@@ -532,6 +598,8 @@ function Panel({
             <Skeleton className="h-4 w-1/2" />
             <Skeleton className="h-4 w-2/3" />
           </div>
+        ) : state.status === 403 && forbiddenNote ? (
+          <p className="py-2 text-sm text-muted-foreground">{forbiddenNote}</p>
         ) : state.error ? (
           <PanelError message={state.error} onRetry={state.reload} />
         ) : (

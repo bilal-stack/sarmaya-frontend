@@ -54,6 +54,35 @@ export interface ExceptionsHeatmap {
   by_vendor: Array<{ vendor: string; count: number }>;
 }
 
+/** Attempts the controls refused. Unlike every other report here, an empty
+ *  result is the good outcome — see the panel's own note. */
+export interface SodViolations {
+  window_days: number;
+  total_blocked: number;
+  /** Segregation failures specifically, kept apart from clerical blocks so a
+   *  rise in missing vendor links cannot read as attempted self-dealing. */
+  sod_blocked: number;
+  other_blocked: number;
+  by_reason: Array<{
+    reason: string;
+    label: string;
+    is_sod: boolean;
+    count: number;
+  }>;
+  by_person: Array<{ who: string; count: number; sod_count: number }>;
+  by_object_type: Array<{ object_type: string; count: number }>;
+  recent: Array<{
+    action: string;
+    reason: string;
+    label: string;
+    is_sod: boolean;
+    who: string | null;
+    object_type: string;
+    object_id: string | null;
+    at: string | null;
+  }>;
+}
+
 export interface PolicyOverrides {
   window_days: number;
   total: number;
