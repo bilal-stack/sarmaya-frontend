@@ -4,7 +4,7 @@ import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/auth-context';
 import {
-  Card, CardContent, CardDescription, CardHeader, CardTitle, } from '@/components/ui/card'; import { Button } from '@/components/ui/button'; import {   FileText, Upload, Bot, MessageSquare, ScanSearch, ArrowRight, Loader2, Inbox, Building2, Bot as BotIcon, Scale, UserCheck, ShieldCheck, ShoppingCart, Banknote, Landmark, ClipboardList, Gavel, Users, Eye, Mail, Gauge, Network, Activity, Boxes, Users2, Plug,
+  Card, CardContent, CardDescription, CardHeader, CardTitle, } from '@/components/ui/card'; import { Button } from '@/components/ui/button'; import {   FileText, Upload, Bot, MessageSquare, ScanSearch, ArrowRight, Loader2, Inbox, Building2, Bot as BotIcon, Scale, UserCheck, ShieldCheck, ShoppingCart, Banknote, Landmark, ClipboardList, Gavel, Users, Eye, Mail, Gauge, Network, Activity, Boxes, Users2, Plug, Wallet,
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -55,6 +55,13 @@ const tools = [
       'Whether the scheduled work is actually running. A job that stops raises nothing anywhere, so the only signal is how long it has been since it last ran — this is where that shows.',
     icon: <Activity className="h-8 w-8 text-primary" />,
     link: '/ai-tools/system',
+  },
+  {
+    name: 'AP & Treasury',
+    description:
+      'What is on the desk: runs authorised but not sent, money that left and never appeared on a statement, how long invoices actually take, and what the duplicate check held back.',
+    icon: <Wallet className="h-8 w-8 text-primary" />,
+    link: '/ai-tools/ap-treasury',
   },
   {
     name: 'Accounting System',

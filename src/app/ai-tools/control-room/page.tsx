@@ -25,6 +25,11 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/auth-context';
 import { API_ENDPOINTS } from '@/lib/api-config';
 import { usePanel } from '@/hooks/use-panel';
+// Shared with the AP/Treasury page. Extracted when that became the second
+// consumer rather than in anticipation of it.
+import {
+  Panel, PanelError, Empty, Stat, money, peak,
+} from '@/components/reports/panel';
 import type {
   ControlRoom, Bottlenecks, ExceptionsHeatmap, PolicyOverrides, SodViolations,
   EvidenceCompleteness, ReconciliationHealth, AutopilotHealth, AgeBucket,
@@ -45,12 +50,6 @@ import {
   Loader2, RefreshCw, ArrowRight, AlertTriangle, Timer, ShieldAlert,
   Landmark, Bot, FileWarning, TrendingUp, Gauge, Download,
 } from 'lucide-react';
-
-const money = (n: number) =>
-  n.toLocaleString(undefined, { maximumFractionDigits: 0 });
-
-/** Longest bar in a set, for scaling. Never zero, so a lone value still shows. */
-const peak = (values: number[]) => Math.max(1, ...values);
 
 export default function ControlRoomPage() {
   const router = useRouter();
@@ -550,77 +549,6 @@ export default function ControlRoomPage() {
   );
 }
 
-/**
- * A panel frame that owns its own loading and failure states.
- *
- * The title and description render immediately, so the page is readable and
- * correctly laid out before any answer arrives — the card fills, it does not
- * appear.
- */
-function Panel({
-  icon, title, description, state, children, forbiddenNote,
-}: {
-  icon: React.ReactNode;
-  title: string;
-  description: string;
-  state: {
-    loading: boolean; error: string | null; data: unknown;
-    reload: () => void; status?: number | null;
-  };
-  children: React.ReactNode;
-  /** Shown instead of the error-and-retry when the answer is 403. Not every
-   *  panel on this page reads with the same permission, and "you may not see
-   *  this" is a fact rather than a failure — offering somebody a retry button
-   *  for a permission they do not have makes a working page look broken. */
-  forbiddenNote?: string;
-}) {
-  // Skeleton only when there is nothing to show yet. On a refresh the figures
-  // stay put and the small header spinner does the talking — blanking numbers
-  // somebody is reading, to replace them with the same numbers, is a flicker
-  // that makes the page feel less trustworthy rather than more current.
-  const firstLoad = state.loading && state.data === null;
-  return (
-    <Card>
-      <CardHeader className="pb-3">
-        <CardTitle className="text-base flex items-center gap-2">
-          {icon}
-          {title}
-          {state.loading && (
-            <Loader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground ml-auto" />
-          )}
-        </CardTitle>
-        <CardDescription>{description}</CardDescription>
-      </CardHeader>
-      <CardContent>
-        {firstLoad ? (
-          <div className="space-y-2 py-2">
-            <Skeleton className="h-4 w-3/4" />
-            <Skeleton className="h-4 w-1/2" />
-            <Skeleton className="h-4 w-2/3" />
-          </div>
-        ) : state.status === 403 && forbiddenNote ? (
-          <p className="py-2 text-sm text-muted-foreground">{forbiddenNote}</p>
-        ) : state.error ? (
-          <PanelError message={state.error} onRetry={state.reload} />
-        ) : (
-          children
-        )}
-      </CardContent>
-    </Card>
-  );
-}
-
-function PanelError({ message, onRetry }: { message: string; onRetry: () => void }) {
-  return (
-    <div className="py-4 text-center">
-      <p className="text-sm text-muted-foreground">{message}</p>
-      <Button variant="ghost" size="sm" className="mt-1" onClick={onRetry}>
-        <RefreshCw className="h-3 w-3 mr-1" />
-        Try again
-      </Button>
-    </div>
-  );
-}
 
 function StuckRowSkeleton() {
   return (
@@ -662,24 +590,4 @@ function Buckets({ buckets }: { buckets: AgeBucket[] }) {
   );
 }
 
-function Stat({
-  label, value, warn,
-}: {
-  label: string;
-  value: number | string;
-  warn?: boolean;
-}) {
-  const isProblem = warn && (typeof value === 'number' ? value > 0 : true);
-  return (
-    <div>
-      <p className={`text-lg font-semibold ${isProblem ? 'text-orange-500' : ''}`}>
-        {value}
-      </p>
-      <p className="text-xs text-muted-foreground">{label}</p>
-    </div>
-  );
-}
 
-function Empty({ children }: { children: React.ReactNode }) {
-  return <p className="text-sm text-muted-foreground py-6 text-center">{children}</p>;
-}
