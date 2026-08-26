@@ -235,6 +235,10 @@ export const API_ENDPOINTS = {
     BOTTLENECKS: `${API_BASE_URL}/dashboard/bottlenecks`,
     EXCEPTIONS: `${API_BASE_URL}/dashboard/exceptions`,
     POLICY_OVERRIDES: `${API_BASE_URL}/dashboard/policy-overrides`,
+    // Reads with audit.view, not the dashboard permission — it names a person
+    // and an action they were refused. Expect a 403 for ordinary roles on a
+    // page they can otherwise see.
+    SOD_VIOLATIONS: `${API_BASE_URL}/dashboard/sod-violations`,
     EVIDENCE: `${API_BASE_URL}/dashboard/evidence`,
     RECONCILIATION_HEALTH: `${API_BASE_URL}/dashboard/reconciliation-health`,
     AUTOPILOT_HEALTH: `${API_BASE_URL}/dashboard/autopilot-health`,
