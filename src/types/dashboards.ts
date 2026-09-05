@@ -191,3 +191,146 @@ export interface DashboardOverview {
   reconciliation: ReconciliationHealth;
   autopilot: AutopilotHealth;
 }
+
+
+/**
+ * The control matrices.
+ *
+ * A view of rules that already exist and are already enforced. The value is
+ * not the list — it is what the grid makes visible that a list does not: an
+ * amount band no rule covers, a rule that can never fire, and a role holding
+ * both halves of a separation.
+ */
+
+export interface ApprovalRule {
+  policy_name: string;
+  threshold: number;
+  operator: string;
+  required_role: string;
+}
+
+export interface ApprovalBand {
+  amount: number;
+  /** null when nothing matched — routing falls through to a split hardcoded
+   *  in policy.py that nobody configured and nobody can see on the policy
+   *  screen. */
+  required_role: string | null;
+  decided_by: string | null;
+  falls_back: boolean;
+}
+
+export interface ApprovalMatrix {
+  rules: ApprovalRule[];
+  bands: ApprovalBand[];
+  gaps: ApprovalBand[];
+  /** Active, configured, and decides nothing: something above it always
+   *  matches first. */
+  unreachable_rules: string[];
+  roles_used: string[];
+  /** Always null. The Build Book asks for role x amount x category and the
+   *  rule config carries no category, so the axis does not exist. Reported
+   *  rather than quietly omitted. */
+  category_axis: null;
+}
+
+export type Barrier = 'none' | 'runtime_check' | 'permissions';
+
+export interface SodRuleRow {
+  rule: string;
+  control: string;
+  first_action: string;
+  /** null when the first half is an identity rather than a permission — being
+   *  the employee a claim is for is not something a role grants. */
+  first_permission: string | null;
+  second_action: string;
+  second_permission: string;
+  admin_exempt: boolean;
+  enforced_at: string;
+  roles_holding_both: string[];
+  roles_first_only: string[];
+  roles_second_only: string[];
+  roles_with_no_barrier: string[];
+  ordinary_roles_holding_both: string[];
+  weakest_barrier: Barrier;
+}
+
+export interface SodMatrix {
+  roles: string[];
+  rules: SodRuleRow[];
+  /** True of every row, so it is stated once here rather than repeated. */
+  admin_holds_every_permission: boolean;
+  unblocked_for_admin: string[];
+  depends_on_the_runtime_check: Array<{ rule: string; roles: string[] }>;
+  separated_by_permissions: string[];
+}
+
+
+/** CFO / Finance Director. */
+
+export interface PayableBucket {
+  bucket: string;
+  count: number;
+  amount: number;
+}
+
+export interface FunnelStage {
+  stage: string;
+  label: string;
+  /** What this stage means in a sentence somebody can act on. */
+  note: string;
+  count: number;
+  amount: number;
+}
+
+export interface ApAging {
+  as_of: string;
+  total_payable: number;
+  total_overdue: number;
+  overdue_pct: number;
+  /** Aged against the due date, not against how long the record has sat. */
+  aging: PayableBucket[];
+  /** Reported separately rather than bucketed as "not yet due": the column is
+   *  nullable, and a payable nobody can chase is itself the finding. */
+  no_due_date: { count: number; amount: number };
+  funnel: FunnelStage[];
+  most_overdue: Array<{
+    invoice_id: string;
+    invoice_number: string;
+    vendor: string | null;
+    amount: number;
+    days_overdue: number;
+    state: string;
+  }>;
+}
+
+export interface SpendSlice {
+  key: string;
+  count: number;
+  amount: number;
+}
+
+export interface SpendAnalytics {
+  window_days: number;
+  since: string;
+  total_spend: number;
+  invoice_count: number;
+  by_vendor: SpendSlice[];
+  vendor_count: number;
+  /** Negotiating position on one side, single-supplier exposure on the other.
+   *  null below six vendors, where it is always 100% by arithmetic and so says
+   *  nothing about concentration. */
+  top_5_vendor_share_pct: number | null;
+  by_gl_account: SpendSlice[];
+  by_cost_centre: SpendSlice[];
+  by_month: SpendSlice[];
+  /** Kept in the denominator and named, so the breakdown cannot read as
+   *  complete while describing only the well-behaved fraction. */
+  unclassified: {
+    no_gl_account: number;
+    no_gl_account_pct: number;
+    no_cost_centre: number;
+    no_cost_centre_pct: number;
+  };
+  /** Always null — invoices carry no category, so there is nothing to chart. */
+  by_category: null;
+}

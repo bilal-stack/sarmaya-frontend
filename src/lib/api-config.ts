@@ -227,6 +227,15 @@ export const API_ENDPOINTS = {
     // Role changes require users.manage and are never self-service.
     SET_ROLE: (id: string) => `${API_BASE_URL}/users/${id}/role`,
   },
+  MATRICES: {
+    // The control matrices: the rules as a grid rather than a list, so the
+    // gaps show. Both read with audit.view, not the dashboard permission —
+    // they describe the shape of the controls rather than any record, which is
+    // what somebody looking for a way around them would want. Expect a 403 for
+    // ordinary roles.
+    APPROVAL: `${API_BASE_URL}/matrices/approval`,
+    SOD: `${API_BASE_URL}/matrices/sod`,
+  },
   DASHBOARD: {
     // The seven Build Book dashboards, computed from history rather than from
     // counters. OVERVIEW returns all seven in one call.
@@ -248,6 +257,13 @@ export const API_ENDPOINTS = {
     EVIDENCE: `${API_BASE_URL}/dashboard/evidence`,
     RECONCILIATION_HEALTH: `${API_BASE_URL}/dashboard/reconciliation-health`,
     AUTOPILOT_HEALTH: `${API_BASE_URL}/dashboard/autopilot-health`,
+    // CFO / Finance Director. AP_AGING takes no window — a payables balance
+    // is point-in-time, and what is owed is owed regardless of the period
+    // somebody is looking at. SPEND defaults to a year rather than the 90 days
+    // the operational reports use: spend is read against a budget cycle.
+    AP_AGING: `${API_BASE_URL}/dashboard/ap-aging`,
+    SPEND_ANALYTICS: (days = 365) =>
+      `${API_BASE_URL}/dashboard/spend-analytics?days=${days}`,
     // Variant D reports.
     STOCK_ACCURACY: `${API_BASE_URL}/dashboard/stock-accuracy`,
     SUPPLIER_PERFORMANCE: `${API_BASE_URL}/dashboard/supplier-performance`,
