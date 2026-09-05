@@ -257,6 +257,13 @@ export const API_ENDPOINTS = {
     EVIDENCE: `${API_BASE_URL}/dashboard/evidence`,
     RECONCILIATION_HEALTH: `${API_BASE_URL}/dashboard/reconciliation-health`,
     AUTOPILOT_HEALTH: `${API_BASE_URL}/dashboard/autopilot-health`,
+    // CFO / Finance Director. AP_AGING takes no window — a payables balance
+    // is point-in-time, and what is owed is owed regardless of the period
+    // somebody is looking at. SPEND defaults to a year rather than the 90 days
+    // the operational reports use: spend is read against a budget cycle.
+    AP_AGING: `${API_BASE_URL}/dashboard/ap-aging`,
+    SPEND_ANALYTICS: (days = 365) =>
+      `${API_BASE_URL}/dashboard/spend-analytics?days=${days}`,
     // Variant D reports.
     STOCK_ACCURACY: `${API_BASE_URL}/dashboard/stock-accuracy`,
     SUPPLIER_PERFORMANCE: `${API_BASE_URL}/dashboard/supplier-performance`,

@@ -263,3 +263,74 @@ export interface SodMatrix {
   depends_on_the_runtime_check: Array<{ rule: string; roles: string[] }>;
   separated_by_permissions: string[];
 }
+
+
+/** CFO / Finance Director. */
+
+export interface PayableBucket {
+  bucket: string;
+  count: number;
+  amount: number;
+}
+
+export interface FunnelStage {
+  stage: string;
+  label: string;
+  /** What this stage means in a sentence somebody can act on. */
+  note: string;
+  count: number;
+  amount: number;
+}
+
+export interface ApAging {
+  as_of: string;
+  total_payable: number;
+  total_overdue: number;
+  overdue_pct: number;
+  /** Aged against the due date, not against how long the record has sat. */
+  aging: PayableBucket[];
+  /** Reported separately rather than bucketed as "not yet due": the column is
+   *  nullable, and a payable nobody can chase is itself the finding. */
+  no_due_date: { count: number; amount: number };
+  funnel: FunnelStage[];
+  most_overdue: Array<{
+    invoice_id: string;
+    invoice_number: string;
+    vendor: string | null;
+    amount: number;
+    days_overdue: number;
+    state: string;
+  }>;
+}
+
+export interface SpendSlice {
+  key: string;
+  count: number;
+  amount: number;
+}
+
+export interface SpendAnalytics {
+  window_days: number;
+  since: string;
+  total_spend: number;
+  invoice_count: number;
+  by_vendor: SpendSlice[];
+  vendor_count: number;
+  /** Negotiating position on one side, single-supplier exposure on the other.
+   *  null below six vendors, where it is always 100% by arithmetic and so says
+   *  nothing about concentration. */
+  top_5_vendor_share_pct: number | null;
+  by_gl_account: SpendSlice[];
+  by_cost_centre: SpendSlice[];
+  by_month: SpendSlice[];
+  /** Kept in the denominator and named, so the breakdown cannot read as
+   *  complete while describing only the well-behaved fraction. */
+  unclassified: {
+    no_gl_account: number;
+    no_gl_account_pct: number;
+    no_cost_centre: number;
+    no_cost_centre_pct: number;
+  };
+  /** Always null — invoices carry no category, so there is nothing to chart. */
+  by_category: null;
+}

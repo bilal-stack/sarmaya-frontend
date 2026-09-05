@@ -94,11 +94,17 @@ export function PanelError({
 }
 
 export function Stat({
-  label, value, warn,
+  label, value, warn, hint,
 }: {
   label: string;
   value: number | string;
   warn?: boolean;
+  /** A second line under the label, for the figure a number needs to be read
+   *  correctly — "12% of everything owed" beside an overdue balance, or "3
+   *  invoices nothing can chase". Added for the CFO page, where several
+   *  headline numbers are meaningless without their denominator. Optional, so
+   *  the two existing callers are unaffected. */
+  hint?: string;
 }) {
   const isProblem = warn && (typeof value === 'number' ? value > 0 : true);
   return (
@@ -107,6 +113,7 @@ export function Stat({
         {value}
       </p>
       <p className="text-xs text-muted-foreground">{label}</p>
+      {hint && <p className="text-xs text-muted-foreground/70 mt-0.5">{hint}</p>}
     </div>
   );
 }

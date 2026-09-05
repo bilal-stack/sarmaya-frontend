@@ -64,6 +64,13 @@ const tools = [
     link: '/ai-tools/system',
   },
   {
+    name: 'CFO & Finance',
+    description:
+      'What we owe and how late it is — aged against the due date rather than how long a record has sat — then where the money went. Payables nothing can chase and spend nobody classified are shown rather than dropped, because those are the halves a tidier report would hide.',
+    icon: <Landmark className="h-8 w-8 text-primary" />,
+    link: '/ai-tools/cfo',
+  },
+  {
     name: 'AP & Treasury',
     description:
       'What is on the desk: runs authorised but not sent, money that left and never appeared on a statement, how long invoices actually take, and what the duplicate check held back.',
