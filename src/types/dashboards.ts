@@ -191,3 +191,75 @@ export interface DashboardOverview {
   reconciliation: ReconciliationHealth;
   autopilot: AutopilotHealth;
 }
+
+
+/**
+ * The control matrices.
+ *
+ * A view of rules that already exist and are already enforced. The value is
+ * not the list — it is what the grid makes visible that a list does not: an
+ * amount band no rule covers, a rule that can never fire, and a role holding
+ * both halves of a separation.
+ */
+
+export interface ApprovalRule {
+  policy_name: string;
+  threshold: number;
+  operator: string;
+  required_role: string;
+}
+
+export interface ApprovalBand {
+  amount: number;
+  /** null when nothing matched — routing falls through to a split hardcoded
+   *  in policy.py that nobody configured and nobody can see on the policy
+   *  screen. */
+  required_role: string | null;
+  decided_by: string | null;
+  falls_back: boolean;
+}
+
+export interface ApprovalMatrix {
+  rules: ApprovalRule[];
+  bands: ApprovalBand[];
+  gaps: ApprovalBand[];
+  /** Active, configured, and decides nothing: something above it always
+   *  matches first. */
+  unreachable_rules: string[];
+  roles_used: string[];
+  /** Always null. The Build Book asks for role x amount x category and the
+   *  rule config carries no category, so the axis does not exist. Reported
+   *  rather than quietly omitted. */
+  category_axis: null;
+}
+
+export type Barrier = 'none' | 'runtime_check' | 'permissions';
+
+export interface SodRuleRow {
+  rule: string;
+  control: string;
+  first_action: string;
+  /** null when the first half is an identity rather than a permission — being
+   *  the employee a claim is for is not something a role grants. */
+  first_permission: string | null;
+  second_action: string;
+  second_permission: string;
+  admin_exempt: boolean;
+  enforced_at: string;
+  roles_holding_both: string[];
+  roles_first_only: string[];
+  roles_second_only: string[];
+  roles_with_no_barrier: string[];
+  ordinary_roles_holding_both: string[];
+  weakest_barrier: Barrier;
+}
+
+export interface SodMatrix {
+  roles: string[];
+  rules: SodRuleRow[];
+  /** True of every row, so it is stated once here rather than repeated. */
+  admin_holds_every_permission: boolean;
+  unblocked_for_admin: string[];
+  depends_on_the_runtime_check: Array<{ rule: string; roles: string[] }>;
+  separated_by_permissions: string[];
+}

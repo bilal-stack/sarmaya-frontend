@@ -227,6 +227,15 @@ export const API_ENDPOINTS = {
     // Role changes require users.manage and are never self-service.
     SET_ROLE: (id: string) => `${API_BASE_URL}/users/${id}/role`,
   },
+  MATRICES: {
+    // The control matrices: the rules as a grid rather than a list, so the
+    // gaps show. Both read with audit.view, not the dashboard permission —
+    // they describe the shape of the controls rather than any record, which is
+    // what somebody looking for a way around them would want. Expect a 403 for
+    // ordinary roles.
+    APPROVAL: `${API_BASE_URL}/matrices/approval`,
+    SOD: `${API_BASE_URL}/matrices/sod`,
+  },
   DASHBOARD: {
     // The seven Build Book dashboards, computed from history rather than from
     // counters. OVERVIEW returns all seven in one call.

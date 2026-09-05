@@ -4,7 +4,7 @@ import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/auth-context';
 import {
-  Card, CardContent, CardDescription, CardHeader, CardTitle, } from '@/components/ui/card'; import { Button } from '@/components/ui/button'; import {   FileText, Upload, Bot, MessageSquare, ScanSearch, ArrowRight, Loader2, Inbox, Building2, Bot as BotIcon, Scale, UserCheck, ShieldCheck, ShoppingCart, Banknote, Landmark, ClipboardList, Gavel, Users, Eye, Mail, Gauge, Network, Activity, Boxes, Users2, Plug, Wallet,
+  Card, CardContent, CardDescription, CardHeader, CardTitle, } from '@/components/ui/card'; import { Button } from '@/components/ui/button'; import {   FileText, Upload, Bot, MessageSquare, ScanSearch, ArrowRight, Loader2, Inbox, Building2, Bot as BotIcon, Scale, UserCheck, ShieldCheck, ShoppingCart, Banknote, Landmark, ClipboardList, Gavel, Users, Eye, Mail, Gauge, Network, Activity, Boxes, Users2, Plug, Wallet, Grid3x3,
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -48,6 +48,13 @@ const tools = [
       'A role says what somebody may do; it has never said what they may do it to. Assign a business unit, location or cost centre and they see that unit and everything beneath it — with no scope meaning the whole tenant, as before.',
     icon: <Network className="h-8 w-8 text-primary" />,
     link: '/ai-tools/org-units',
+  },
+  {
+    name: 'Control Matrices',
+    description:
+      'The approval and segregation rules as grids rather than lists, because a list says what exists and a grid says what is missing — an amount band no rule covers, a rule that can never fire, a role holding both halves of a separation.',
+    icon: <Grid3x3 className="h-8 w-8 text-primary" />,
+    link: '/ai-tools/matrices',
   },
   {
     name: 'System Health',
