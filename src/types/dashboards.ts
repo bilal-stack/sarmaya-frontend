@@ -334,3 +334,106 @@ export interface SpendAnalytics {
   /** Always null — invoices carry no category, so there is nothing to chart. */
   by_category: null;
 }
+
+
+/** Procurement Leadership. */
+
+export interface RfqStage {
+  stage: string;
+  /** A human name for the stage. The `from`/`to` fields below are raw audit
+   *  action names — internal vocabulary, kept so somebody reconciling against
+   *  the trail can see what was measured, not for display. */
+  label: string;
+  from: string;
+  to: string;
+  /** Whether this stage is a delay we own or a window we chose to give
+   *  vendors. The distinction matters: reading the vendor window as a delay
+   *  pushes a buyer to shorten the time suppliers get, which is the opposite
+   *  of the improvement. */
+  note: string;
+  count: number;
+  /** null when nothing completed this stage in the window — not zero, which
+   *  would read as instantaneous. */
+  median_days: number | null;
+  worst_days: number | null;
+}
+
+export interface RfqCycleTime {
+  window_days: number;
+  rfq_count: number;
+  stages: RfqStage[];
+  competition: {
+    invited: number;
+    quoted: number;
+    response_rate_pct: number;
+    /** Awarded on one quote or none. Not necessarily wrong — sole supply is
+     *  real — but it is the case a cycle-time average never surfaces. */
+    single_quote_awards: number;
+    awarded_with_competition: number;
+  };
+  savings: {
+    awarded_value: number;
+    /** Against the requisition estimate: what somebody committed to in
+     *  writing before any vendor quoted. */
+    vs_estimate: number | null;
+    vs_estimate_pct: number | null;
+    /** Against the highest compliant quote on the same RFQ: the worst
+     *  alternative actually on the table. null when no award had one. */
+    vs_highest_quote: number | null;
+    vs_highest_quote_pct: number | null;
+    /** Awarded on a single compliant quote, so there was nothing to save
+     *  against. Counted rather than folded in at zero. */
+    awards_with_no_comparison: number;
+  };
+  overdue_open: Array<{
+    rfq_id: string;
+    rfq_number: string;
+    closed_days_ago: number;
+  }>;
+}
+
+
+/** COO / Supply Chain. */
+
+export interface InventoryTurns {
+  window_days: number;
+  since: string;
+  cogs: number;
+  /** Reconstructed exactly by subtracting the window's net movements from the
+   *  current balance — possible only because the movement ledger is
+   *  append-only. */
+  opening_value: number;
+  closing_value: number;
+  average_value: number;
+  /** null when there is no stock to turn. Zero would read as stock sitting
+   *  dead, which is a different problem from having none. */
+  turns_per_year: number | null;
+  days_of_stock: number | null;
+  /** How much of the warehouse the figures above do not cover. Items with no
+   *  standard cost fall outside every number here — excluding them and costing
+   *  them at zero give the identical ratio, so this is disclosure rather than
+   *  protection against a distorted figure. */
+  uncosted: { item_count: number; units_on_hand: number };
+}
+
+export interface P2PStep {
+  step: string;
+  label: string;
+  /** `object_type.action` from the audit trail. Kept for reconciliation, not
+   *  for display. */
+  from: string;
+  to: string;
+  count: number;
+  median_days: number | null;
+  worst_days: number | null;
+}
+
+export interface P2PCycleTime {
+  window_days: number;
+  chains_seen: number;
+  steps: P2PStep[];
+  /** The sum of the medians, not the median of the totals. No single purchase
+   *  necessarily took this long. */
+  typical_total_days: number | null;
+  slowest_step: string | null;
+}
