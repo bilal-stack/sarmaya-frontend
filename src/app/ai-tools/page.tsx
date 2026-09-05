@@ -64,6 +64,20 @@ const tools = [
     link: '/ai-tools/system',
   },
   {
+    name: 'Supply Chain',
+    description:
+      'How fast stock actually moves — with the opening balance reconstructed from the ledger rather than estimated, and the uncosted share stated so you know how much of the warehouse the number covers. Then the whole purchase-to-pay run, hop by hop, with the slow handover named.',
+    icon: <Boxes className="h-8 w-8 text-primary" />,
+    link: '/ai-tools/supply-chain',
+  },
+  {
+    name: 'Procurement',
+    description:
+      'How long sourcing takes, broken into the three stages we own and the one window we give vendors — because a single average invites the one fix that makes things worse. Plus whether anybody actually competed, and what the award saved against two baselines that were both set before the decision.',
+    icon: <Gavel className="h-8 w-8 text-primary" />,
+    link: '/ai-tools/procurement',
+  },
+  {
     name: 'CFO & Finance',
     description:
       'What we owe and how late it is — aged against the due date rather than how long a record has sat — then where the money went. Payables nothing can chase and spend nobody classified are shown rather than dropped, because those are the halves a tidier report would hide.',

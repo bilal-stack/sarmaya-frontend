@@ -264,6 +264,19 @@ export const API_ENDPOINTS = {
     AP_AGING: `${API_BASE_URL}/dashboard/ap-aging`,
     SPEND_ANALYTICS: (days = 365) =>
       `${API_BASE_URL}/dashboard/spend-analytics?days=${days}`,
+    // Procurement Leadership. 180 days by default rather than the 90 the
+    // operational reports use: a sourcing cycle runs in weeks, so a shorter
+    // window often holds only one or two completed ones. Reads with
+    // requisitions.view, not sourcing.manage.
+    RFQ_CYCLE_TIME: (days = 180) =>
+      `${API_BASE_URL}/dashboard/rfq-cycle-time?days=${days}`,
+    // COO / Supply Chain. Turns are annualised, so a 90-day window and a
+    // year are directly comparable. P2P follows one purchase across all five
+    // modules via the correlation id.
+    INVENTORY_TURNS: (days = 365) =>
+      `${API_BASE_URL}/dashboard/inventory-turns?days=${days}`,
+    P2P_CYCLE_TIME: (days = 180) =>
+      `${API_BASE_URL}/dashboard/p2p-cycle-time?days=${days}`,
     // Variant D reports.
     STOCK_ACCURACY: `${API_BASE_URL}/dashboard/stock-accuracy`,
     SUPPLIER_PERFORMANCE: `${API_BASE_URL}/dashboard/supplier-performance`,
