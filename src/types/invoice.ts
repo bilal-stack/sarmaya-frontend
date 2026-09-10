@@ -1,4 +1,15 @@
-export type InvoiceStatus = 'draft' | 'pending_approval' | 'approved' | 'rejected' | 'paid' | 'cancelled';
+// Mirrors app/core/enums.py InvoiceState. `validated` was missing, which is
+// the same gap as the missing Validate button: the state exists, every
+// uploaded invoice has to pass through it before it can be submitted, and
+// neither the type nor the UI knew about it.
+export type InvoiceStatus =
+  | 'draft'
+  | 'validated'
+  | 'pending_approval'
+  | 'approved'
+  | 'rejected'
+  | 'paid'
+  | 'cancelled';
 
 export interface Invoice {
   id: string;
@@ -52,6 +63,11 @@ export interface OCRExtractedData {
 }
 
 export interface InvoiceDetail extends Invoice {
+  /** Set when the duplicate check matched an existing invoice. Approval is
+   *  held while this is set and `duplicate_acknowledged` is false — the only
+   *  way past is the resolve-duplicate override, with a reason. */
+  potential_duplicate_id?: string | null;
+  duplicate_acknowledged?: boolean;
   due_date: string | null;
   tax_amount: string;
   subtotal_amount: string;
