@@ -20,6 +20,7 @@ import { useAuth } from '@/context/auth-context';
 import { useToast } from '@/hooks/use-toast';
 import { API_ENDPOINTS, apiFetch } from '@/lib/api-config';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { TwoFactorCard } from '@/components/account/two-factor-card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -310,6 +311,11 @@ export default function AccountPage() {
           </Button>
         </CardContent>
       </Card>
+
+      {/* Second factor. Sits directly under Password because it is the same
+          question — how you prove you are you — and somebody who has just
+          changed one is the person most likely to want the other. */}
+      <TwoFactorCard />
 
       {/* Team roles — only for users.manage holders */}
       {canManageUsers && (

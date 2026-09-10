@@ -4,7 +4,7 @@ import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/auth-context';
 import {
-  Card, CardContent, CardDescription, CardHeader, CardTitle, } from '@/components/ui/card'; import { Button } from '@/components/ui/button'; import {   FileText, Upload, Bot, MessageSquare, ScanSearch, ArrowRight, Loader2, Inbox, Building2, Bot as BotIcon, Scale, UserCheck, ShieldCheck, ShoppingCart, Banknote, Landmark, ClipboardList, Gavel, Users, Eye, Mail, Gauge, Network, Activity, Boxes, Users2, Plug,
+  Card, CardContent, CardDescription, CardHeader, CardTitle, } from '@/components/ui/card'; import { Button } from '@/components/ui/button'; import {   FileText, Upload, Bot, MessageSquare, ScanSearch, ArrowRight, Loader2, Inbox, Building2, Bot as BotIcon, Scale, UserCheck, ShieldCheck, ShoppingCart, Banknote, Landmark, ClipboardList, Gavel, Users, Eye, Mail, Gauge, Network, Activity, Boxes, Users2, Plug, Wallet, Grid3x3,
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -50,11 +50,46 @@ const tools = [
     link: '/ai-tools/org-units',
   },
   {
+    name: 'Control Matrices',
+    description:
+      'The approval and segregation rules as grids rather than lists, because a list says what exists and a grid says what is missing — an amount band no rule covers, a rule that can never fire, a role holding both halves of a separation.',
+    icon: <Grid3x3 className="h-8 w-8 text-primary" />,
+    link: '/ai-tools/matrices',
+  },
+  {
     name: 'System Health',
     description:
       'Whether the scheduled work is actually running. A job that stops raises nothing anywhere, so the only signal is how long it has been since it last ran — this is where that shows.',
     icon: <Activity className="h-8 w-8 text-primary" />,
     link: '/ai-tools/system',
+  },
+  {
+    name: 'Supply Chain',
+    description:
+      'How fast stock actually moves — with the opening balance reconstructed from the ledger rather than estimated, and the uncosted share stated so you know how much of the warehouse the number covers. Then the whole purchase-to-pay run, hop by hop, with the slow handover named.',
+    icon: <Boxes className="h-8 w-8 text-primary" />,
+    link: '/ai-tools/supply-chain',
+  },
+  {
+    name: 'Procurement',
+    description:
+      'How long sourcing takes, broken into the three stages we own and the one window we give vendors — because a single average invites the one fix that makes things worse. Plus whether anybody actually competed, and what the award saved against two baselines that were both set before the decision.',
+    icon: <Gavel className="h-8 w-8 text-primary" />,
+    link: '/ai-tools/procurement',
+  },
+  {
+    name: 'CFO & Finance',
+    description:
+      'What we owe and how late it is — aged against the due date rather than how long a record has sat — then where the money went. Payables nothing can chase and spend nobody classified are shown rather than dropped, because those are the halves a tidier report would hide.',
+    icon: <Landmark className="h-8 w-8 text-primary" />,
+    link: '/ai-tools/cfo',
+  },
+  {
+    name: 'AP & Treasury',
+    description:
+      'What is on the desk: runs authorised but not sent, money that left and never appeared on a statement, how long invoices actually take, and what the duplicate check held back.',
+    icon: <Wallet className="h-8 w-8 text-primary" />,
+    link: '/ai-tools/ap-treasury',
   },
   {
     name: 'Accounting System',
