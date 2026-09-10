@@ -24,6 +24,17 @@ export const API_ENDPOINTS = {
     ME: `${API_BASE_URL}/auth/me`,
     // Credentials go in the body, never the query string.
     CHANGE_PASSWORD: `${API_BASE_URL}/auth/change-password`,
+
+    // Second factor. VERIFY finishes a sign-in that /auth/login answered with
+    // `mfa_required` — the challenge token it returns authenticates nothing on
+    // its own and expires in minutes, so it is the code that completes it.
+    MFA_VERIFY: `${API_BASE_URL}/auth/mfa/verify`,
+    // The rest need an ordinary session; they manage the factor, not the login.
+    MFA_STATUS: `${API_BASE_URL}/auth/mfa`,
+    MFA_SETUP: `${API_BASE_URL}/auth/mfa/setup`,
+    MFA_CONFIRM: `${API_BASE_URL}/auth/mfa/confirm`,
+    MFA_DISABLE: `${API_BASE_URL}/auth/mfa/disable`,
+    MFA_RECOVERY_CODES: `${API_BASE_URL}/auth/mfa/recovery-codes`,
   },
   INVOICES: {
     LIST: `${API_BASE_URL}/invoices`,
