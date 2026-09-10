@@ -24,6 +24,10 @@ export const API_ENDPOINTS = {
     ME: `${API_BASE_URL}/auth/me`,
     // Credentials go in the body, never the query string.
     CHANGE_PASSWORD: `${API_BASE_URL}/auth/change-password`,
+    // Revokes every token issued to this user by bumping token_version.
+    // Clearing localStorage alone leaves the token valid until it expires,
+    // so a copied token survives a sign-out that looks complete.
+    LOGOUT: `${API_BASE_URL}/auth/logout`,
 
     // Second factor. VERIFY finishes a sign-in that /auth/login answered with
     // `mfa_required` — the challenge token it returns authenticates nothing on
@@ -44,6 +48,16 @@ export const API_ENDPOINTS = {
     APPROVE: (id: string) => `${API_BASE_URL}/invoices/${id}/approve`,
     REJECT: (id: string) => `${API_BASE_URL}/invoices/${id}/reject`,
     MARK_PAID: (id: string) => `${API_BASE_URL}/invoices/${id}/mark-paid`,
+    // Draft -> validated. Submit refuses anything that has not been through
+    // this, so without it an uploaded invoice cannot move at all.
+    VALIDATE: (id: string) => `${API_BASE_URL}/invoices/${id}/validate`,
+    // The only way past the duplicate gate. Approval refuses a flagged
+    // invoice until this records a reason against it.
+    RESOLVE_DUPLICATE: (id: string) =>
+      `${API_BASE_URL}/invoices/${id}/resolve-duplicate`,
+    // Reviewer worklist: pending invoices held because their vendor is not
+    // verified. Fixed by activating the vendor, not by touching the invoice.
+    BLOCKED_ON_VENDOR: `${API_BASE_URL}/invoices/blocked-on-vendor`,
   },
   CHATBOT: {
     LIST: `${API_BASE_URL}/conversation/list`,
