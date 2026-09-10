@@ -5,6 +5,7 @@ import { useRouter, useParams } from 'next/navigation';
 import { useAuth } from '@/context/auth-context';
 import { useToast } from '@/hooks/use-toast';
 import { apiFetch, API_ENDPOINTS } from '@/lib/api-config';
+import { ResolveDuplicateDialog } from '@/components/invoices/resolve-duplicate-dialog';
 import type { InvoiceDetail, ApiError } from '@/types/invoice';
 import type { NextAction } from '@/types/governance';
 import Link from 'next/link';
@@ -77,6 +78,8 @@ export default function InvoiceDetailPage() {
   const [invoice, setInvoice] = useState<InvoiceDetail | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  // The screen the next-action router used to say it did not own.
+  const [duplicateOpen, setDuplicateOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isApproving, setIsApproving] = useState(false);
   const [isRejecting, setIsRejecting] = useState(false);
@@ -182,13 +185,49 @@ export default function InvoiceDetailPage() {
         return handleMarkAsPaid();
       case 'verify_vendor':
         return router.push('/ai-tools/vendors');
+      case 'resolve_duplicate':
+        // This one now has a screen. It still does not fire a mutation blind —
+        // the override needs a reason, and the dialog is where that is given.
+        setDuplicateOpen(true);
+        return;
       case 'review_extraction':
       case 'fix_missing_fields':
       case 'revise':
-      case 'resolve_duplicate':
       default:
         // Needs human input or a screen we don't own here.
         return;
+    }
+  };
+
+  /** Draft -> validated. submit_for_approval refuses anything that has not
+   *  been through this, so before this existed the Submit button below was
+   *  the only thing a draft offered and it always failed. */
+  const handleValidate = async () => {
+    if (!user?.access_token || !invoice) return;
+    setIsSubmitting(true);
+    try {
+      const response = await apiFetch(
+        API_ENDPOINTS.INVOICES.VALIDATE(invoice.id),
+        { method: 'POST' },
+        user.access_token,
+      );
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.detail || 'Failed to validate invoice');
+      }
+      toast({
+        title: 'Validated',
+        description: 'The invoice is complete and can now be submitted.',
+      });
+      fetchInvoiceDetail();
+    } catch (err: unknown) {
+      toast({
+        variant: 'destructive',
+        title: 'Could not validate',
+        description: err instanceof Error ? err.message : 'Please try again.',
+      });
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -717,6 +756,19 @@ export default function InvoiceDetailPage() {
               {invoice.current_state === 'draft' && (
                 <Button
                   className="w-full"
+                  onClick={handleValidate}
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting && (
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  )}
+                  Validate
+                </Button>
+              )}
+
+              {invoice.current_state === 'validated' && (
+                <Button
+                  className="w-full"
                   onClick={handleSubmitForApproval}
                   disabled={isSubmitting}
                 >
@@ -724,6 +776,18 @@ export default function InvoiceDetailPage() {
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   )}
                   Submit for Approval
+                </Button>
+              )}
+
+              {/* Only reachable while the gate is actually holding something:
+                  flagged, and not yet acknowledged. */}
+              {invoice.potential_duplicate_id && !invoice.duplicate_acknowledged && (
+                <Button
+                  variant="outline"
+                  className="w-full"
+                  onClick={() => setDuplicateOpen(true)}
+                >
+                  Override duplicate flag
                 </Button>
               )}
 
@@ -818,6 +882,14 @@ export default function InvoiceDetailPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <ResolveDuplicateDialog
+        invoiceId={invoice.id}
+        invoiceNumber={invoice.invoice_number}
+        open={duplicateOpen}
+        onOpenChange={setDuplicateOpen}
+        onResolved={fetchInvoiceDetail}
+      />
     </div>
   );
 }

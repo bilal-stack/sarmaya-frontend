@@ -25,8 +25,13 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/auth-context';
 import { API_ENDPOINTS } from '@/lib/api-config';
 import { usePanel } from '@/hooks/use-panel';
+// Shared with the AP/Treasury page. Extracted when that became the second
+// consumer rather than in anticipation of it.
+import {
+  Panel, PanelError, Empty, Stat, money, peak,
+} from '@/components/reports/panel';
 import type {
-  ControlRoom, Bottlenecks, ExceptionsHeatmap, PolicyOverrides,
+  ControlRoom, Bottlenecks, ExceptionsHeatmap, PolicyOverrides, SodViolations,
   EvidenceCompleteness, ReconciliationHealth, AutopilotHealth, AgeBucket,
 } from '@/types/dashboards';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -45,12 +50,6 @@ import {
   Loader2, RefreshCw, ArrowRight, AlertTriangle, Timer, ShieldAlert,
   Landmark, Bot, FileWarning, TrendingUp, Gauge, Download,
 } from 'lucide-react';
-
-const money = (n: number) =>
-  n.toLocaleString(undefined, { maximumFractionDigits: 0 });
-
-/** Longest bar in a set, for scaling. Never zero, so a lone value still shows. */
-const peak = (values: number[]) => Math.max(1, ...values);
 
 export default function ControlRoomPage() {
   const router = useRouter();
@@ -89,6 +88,9 @@ export default function ControlRoomPage() {
   const bottlenecks = usePanel<Bottlenecks>(API_ENDPOINTS.DASHBOARD.BOTTLENECKS, reloadKey);
   const exceptions = usePanel<ExceptionsHeatmap>(API_ENDPOINTS.DASHBOARD.EXCEPTIONS, reloadKey);
   const overrides = usePanel<PolicyOverrides>(API_ENDPOINTS.DASHBOARD.POLICY_OVERRIDES, reloadKey);
+  // 403s for ordinary roles on a page they can otherwise read — the panel
+  // says so rather than offering a retry. See Panel's forbiddenNote.
+  const sod = usePanel<SodViolations>(API_ENDPOINTS.DASHBOARD.SOD_VIOLATIONS, reloadKey);
   const evidence = usePanel<EvidenceCompleteness>(API_ENDPOINTS.DASHBOARD.EVIDENCE, reloadKey);
   const reconciliation = usePanel<ReconciliationHealth>(
     API_ENDPOINTS.DASHBOARD.RECONCILIATION_HEALTH, reloadKey
@@ -96,7 +98,8 @@ export default function ControlRoomPage() {
   const autopilot = usePanel<AutopilotHealth>(API_ENDPOINTS.DASHBOARD.AUTOPILOT_HEALTH, reloadKey);
 
   const anyLoading = [
-    controlRoom, bottlenecks, exceptions, overrides, evidence, reconciliation, autopilot,
+    controlRoom, bottlenecks, exceptions, overrides, sod, evidence,
+    reconciliation, autopilot,
   ].some((p) => p.loading);
 
   // Send an unauthenticated visitor to sign in. Dropping this when the page
@@ -449,6 +452,60 @@ export default function ControlRoomPage() {
         </Panel>
 
         <Panel
+          icon={<ShieldAlert className="h-5 w-5 text-primary" />}
+          title="Blocked attempts"
+          description={
+            sod.data
+              ? `Refused by a control, last ${sod.data.window_days} days.`
+              : 'Refused by a control.'
+          }
+          state={sod}
+          forbiddenNote="Your role cannot see this. It names who was refused, so it reads with the audit permission rather than the dashboard one."
+        >
+          {sod.data && (
+            sod.data.total_blocked === 0 ? (
+              // Deliberately not the neutral "No results." A control that has
+              // never fired looks, from outside, exactly like a control that
+              // was never wired up, and this panel exists to tell them apart.
+              <Empty>Nothing was refused. The controls held.</Empty>
+            ) : (
+              <div className="space-y-2">
+                <div className="flex items-baseline gap-4">
+                  <div>
+                    <div className="text-2xl font-semibold">{sod.data.sod_blocked}</div>
+                    <div className="text-xs text-muted-foreground">
+                      separation of duties
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-2xl font-semibold text-muted-foreground">
+                      {sod.data.other_blocked}
+                    </div>
+                    <div className="text-xs text-muted-foreground">other gates</div>
+                  </div>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Counted apart on purpose: someone trying to approve their own
+                  invoice and someone approving one with no vendor linked are
+                  both refusals, and only one is a segregation failure.
+                </p>
+                {sod.data.by_reason.slice(0, 4).map((row) => (
+                  <div
+                    key={row.reason}
+                    className="flex items-center justify-between gap-2 text-sm"
+                  >
+                    <span className="truncate">{row.label}</span>
+                    <span className="text-muted-foreground shrink-0">
+                      {row.count}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            )
+          )}
+        </Panel>
+
+        <Panel
           icon={<Bot className="h-5 w-5 text-primary" />}
           title="Autopilot health"
           description={
@@ -492,67 +549,6 @@ export default function ControlRoomPage() {
   );
 }
 
-/**
- * A panel frame that owns its own loading and failure states.
- *
- * The title and description render immediately, so the page is readable and
- * correctly laid out before any answer arrives — the card fills, it does not
- * appear.
- */
-function Panel({
-  icon, title, description, state, children,
-}: {
-  icon: React.ReactNode;
-  title: string;
-  description: string;
-  state: { loading: boolean; error: string | null; data: unknown; reload: () => void };
-  children: React.ReactNode;
-}) {
-  // Skeleton only when there is nothing to show yet. On a refresh the figures
-  // stay put and the small header spinner does the talking — blanking numbers
-  // somebody is reading, to replace them with the same numbers, is a flicker
-  // that makes the page feel less trustworthy rather than more current.
-  const firstLoad = state.loading && state.data === null;
-  return (
-    <Card>
-      <CardHeader className="pb-3">
-        <CardTitle className="text-base flex items-center gap-2">
-          {icon}
-          {title}
-          {state.loading && (
-            <Loader2 className="h-3.5 w-3.5 animate-spin text-muted-foreground ml-auto" />
-          )}
-        </CardTitle>
-        <CardDescription>{description}</CardDescription>
-      </CardHeader>
-      <CardContent>
-        {firstLoad ? (
-          <div className="space-y-2 py-2">
-            <Skeleton className="h-4 w-3/4" />
-            <Skeleton className="h-4 w-1/2" />
-            <Skeleton className="h-4 w-2/3" />
-          </div>
-        ) : state.error ? (
-          <PanelError message={state.error} onRetry={state.reload} />
-        ) : (
-          children
-        )}
-      </CardContent>
-    </Card>
-  );
-}
-
-function PanelError({ message, onRetry }: { message: string; onRetry: () => void }) {
-  return (
-    <div className="py-4 text-center">
-      <p className="text-sm text-muted-foreground">{message}</p>
-      <Button variant="ghost" size="sm" className="mt-1" onClick={onRetry}>
-        <RefreshCw className="h-3 w-3 mr-1" />
-        Try again
-      </Button>
-    </div>
-  );
-}
 
 function StuckRowSkeleton() {
   return (
@@ -594,24 +590,4 @@ function Buckets({ buckets }: { buckets: AgeBucket[] }) {
   );
 }
 
-function Stat({
-  label, value, warn,
-}: {
-  label: string;
-  value: number | string;
-  warn?: boolean;
-}) {
-  const isProblem = warn && (typeof value === 'number' ? value > 0 : true);
-  return (
-    <div>
-      <p className={`text-lg font-semibold ${isProblem ? 'text-orange-500' : ''}`}>
-        {value}
-      </p>
-      <p className="text-xs text-muted-foreground">{label}</p>
-    </div>
-  );
-}
 
-function Empty({ children }: { children: React.ReactNode }) {
-  return <p className="text-sm text-muted-foreground py-6 text-center">{children}</p>;
-}
