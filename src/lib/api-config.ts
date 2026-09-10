@@ -24,6 +24,21 @@ export const API_ENDPOINTS = {
     ME: `${API_BASE_URL}/auth/me`,
     // Credentials go in the body, never the query string.
     CHANGE_PASSWORD: `${API_BASE_URL}/auth/change-password`,
+    // Revokes every token issued to this user by bumping token_version.
+    // Clearing localStorage alone leaves the token valid until it expires,
+    // so a copied token survives a sign-out that looks complete.
+    LOGOUT: `${API_BASE_URL}/auth/logout`,
+
+    // Second factor. VERIFY finishes a sign-in that /auth/login answered with
+    // `mfa_required` — the challenge token it returns authenticates nothing on
+    // its own and expires in minutes, so it is the code that completes it.
+    MFA_VERIFY: `${API_BASE_URL}/auth/mfa/verify`,
+    // The rest need an ordinary session; they manage the factor, not the login.
+    MFA_STATUS: `${API_BASE_URL}/auth/mfa`,
+    MFA_SETUP: `${API_BASE_URL}/auth/mfa/setup`,
+    MFA_CONFIRM: `${API_BASE_URL}/auth/mfa/confirm`,
+    MFA_DISABLE: `${API_BASE_URL}/auth/mfa/disable`,
+    MFA_RECOVERY_CODES: `${API_BASE_URL}/auth/mfa/recovery-codes`,
   },
   INVOICES: {
     LIST: `${API_BASE_URL}/invoices`,
@@ -33,6 +48,16 @@ export const API_ENDPOINTS = {
     APPROVE: (id: string) => `${API_BASE_URL}/invoices/${id}/approve`,
     REJECT: (id: string) => `${API_BASE_URL}/invoices/${id}/reject`,
     MARK_PAID: (id: string) => `${API_BASE_URL}/invoices/${id}/mark-paid`,
+    // Draft -> validated. Submit refuses anything that has not been through
+    // this, so without it an uploaded invoice cannot move at all.
+    VALIDATE: (id: string) => `${API_BASE_URL}/invoices/${id}/validate`,
+    // The only way past the duplicate gate. Approval refuses a flagged
+    // invoice until this records a reason against it.
+    RESOLVE_DUPLICATE: (id: string) =>
+      `${API_BASE_URL}/invoices/${id}/resolve-duplicate`,
+    // Reviewer worklist: pending invoices held because their vendor is not
+    // verified. Fixed by activating the vendor, not by touching the invoice.
+    BLOCKED_ON_VENDOR: `${API_BASE_URL}/invoices/blocked-on-vendor`,
   },
   CHATBOT: {
     LIST: `${API_BASE_URL}/conversation/list`,
@@ -227,6 +252,15 @@ export const API_ENDPOINTS = {
     // Role changes require users.manage and are never self-service.
     SET_ROLE: (id: string) => `${API_BASE_URL}/users/${id}/role`,
   },
+  MATRICES: {
+    // The control matrices: the rules as a grid rather than a list, so the
+    // gaps show. Both read with audit.view, not the dashboard permission —
+    // they describe the shape of the controls rather than any record, which is
+    // what somebody looking for a way around them would want. Expect a 403 for
+    // ordinary roles.
+    APPROVAL: `${API_BASE_URL}/matrices/approval`,
+    SOD: `${API_BASE_URL}/matrices/sod`,
+  },
   DASHBOARD: {
     // The seven Build Book dashboards, computed from history rather than from
     // counters. OVERVIEW returns all seven in one call.
@@ -235,9 +269,39 @@ export const API_ENDPOINTS = {
     BOTTLENECKS: `${API_BASE_URL}/dashboard/bottlenecks`,
     EXCEPTIONS: `${API_BASE_URL}/dashboard/exceptions`,
     POLICY_OVERRIDES: `${API_BASE_URL}/dashboard/policy-overrides`,
+    // Reads with audit.view, not the dashboard permission — it names a person
+    // and an action they were refused. Expect a 403 for ordinary roles on a
+    // page they can otherwise see.
+    SOD_VIOLATIONS: `${API_BASE_URL}/dashboard/sod-violations`,
+    // AP / Treasury. PAYMENT_RUN_STATUS reads with payments.view, not the
+    // dashboard permission — a manager and an approver can open every invoice
+    // it touches and cannot open a payment run, so expect a 403 for them.
+    INVOICE_THROUGHPUT: `${API_BASE_URL}/dashboard/invoice-throughput`,
+    PAYMENT_RUN_STATUS: `${API_BASE_URL}/dashboard/payment-run-status`,
+    DUPLICATE_ANOMALY: `${API_BASE_URL}/dashboard/duplicate-anomaly`,
     EVIDENCE: `${API_BASE_URL}/dashboard/evidence`,
     RECONCILIATION_HEALTH: `${API_BASE_URL}/dashboard/reconciliation-health`,
     AUTOPILOT_HEALTH: `${API_BASE_URL}/dashboard/autopilot-health`,
+    // CFO / Finance Director. AP_AGING takes no window — a payables balance
+    // is point-in-time, and what is owed is owed regardless of the period
+    // somebody is looking at. SPEND defaults to a year rather than the 90 days
+    // the operational reports use: spend is read against a budget cycle.
+    AP_AGING: `${API_BASE_URL}/dashboard/ap-aging`,
+    SPEND_ANALYTICS: (days = 365) =>
+      `${API_BASE_URL}/dashboard/spend-analytics?days=${days}`,
+    // Procurement Leadership. 180 days by default rather than the 90 the
+    // operational reports use: a sourcing cycle runs in weeks, so a shorter
+    // window often holds only one or two completed ones. Reads with
+    // requisitions.view, not sourcing.manage.
+    RFQ_CYCLE_TIME: (days = 180) =>
+      `${API_BASE_URL}/dashboard/rfq-cycle-time?days=${days}`,
+    // COO / Supply Chain. Turns are annualised, so a 90-day window and a
+    // year are directly comparable. P2P follows one purchase across all five
+    // modules via the correlation id.
+    INVENTORY_TURNS: (days = 365) =>
+      `${API_BASE_URL}/dashboard/inventory-turns?days=${days}`,
+    P2P_CYCLE_TIME: (days = 180) =>
+      `${API_BASE_URL}/dashboard/p2p-cycle-time?days=${days}`,
     // Variant D reports.
     STOCK_ACCURACY: `${API_BASE_URL}/dashboard/stock-accuracy`,
     SUPPLIER_PERFORMANCE: `${API_BASE_URL}/dashboard/supplier-performance`,
