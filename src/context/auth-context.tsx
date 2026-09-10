@@ -10,6 +10,7 @@ import {
   type ReactNode,
 } from 'react';
 import { useRouter } from 'next/navigation';
+import { API_ENDPOINTS } from '@/lib/api-config';
 
 type UserData = {
   id: string;
@@ -145,10 +146,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const logout = useCallback(() => {
+    // Tell the server first. Clearing localStorage only forgets the token
+    // locally — it stays valid until it expires, so anyone who copied it
+    // still had a working session after a sign-out that looked complete.
+    // /auth/logout bumps token_version, which invalidates every token issued
+    // to this user, including on other devices.
+    const token = user?.access_token;
+    if (token) {
+      // Deliberately not awaited, and failure is deliberately ignored: the
+      // local sign-out must happen whether or not the network does. A user
+      // on a dead connection who cannot clear their own session is worse
+      // than one whose token outlives the click.
+      fetch(API_ENDPOINTS.AUTH.LOGOUT, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+        keepalive: true,
+      }).catch(() => {});
+    }
+
     setUser(null);
     localStorage.removeItem(STORAGE_KEY);
     router.push('/login');
-  }, [router]);
+  }, [router, user?.access_token]);
 
   const value = useMemo(
     () => ({

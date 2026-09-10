@@ -27,6 +27,8 @@ import { MoreVertical, Send as SendIcon, CheckCircle as CheckIcon, XCircle as XI
 
 const STATUS_COLORS: Record<InvoiceStatus, string> = {
   draft: 'bg-gray-500',
+  // Between draft and pending: checked, not yet anybody's decision.
+  validated: 'bg-sky-500',
   pending_approval: 'bg-yellow-500',
   approved: 'bg-green-500',
   rejected: 'bg-red-500',
@@ -36,6 +38,7 @@ const STATUS_COLORS: Record<InvoiceStatus, string> = {
 
 const STATUS_LABELS: Record<InvoiceStatus, string> = {
   draft: 'Draft',
+  validated: 'Validated',
   pending_approval: 'Pending Approval',
   approved: 'Approved',
   rejected: 'Rejected',
@@ -128,18 +131,20 @@ export default function InvoicesPage() {
     }
   };
 
-  const handleQuickAction = async (invoiceId: string, action: 'submit' | 'approve' | 'mark-paid', e: React.MouseEvent) => {
+  const handleQuickAction = async (invoiceId: string, action: 'validate' | 'submit' | 'approve' | 'mark-paid', e: React.MouseEvent) => {
     e.stopPropagation();
 
     if (!user?.access_token) return;
 
     const endpoints = {
+      validate: API_ENDPOINTS.INVOICES.VALIDATE(invoiceId),
       submit: API_ENDPOINTS.INVOICES.SUBMIT(invoiceId),
       approve: API_ENDPOINTS.INVOICES.APPROVE(invoiceId),
       'mark-paid': API_ENDPOINTS.INVOICES.MARK_PAID(invoiceId),
     };
 
     const messages = {
+      validate: 'Invoice validated and ready to submit',
       submit: 'Invoice submitted for approval',
       approve: 'Invoice approved successfully',
       'mark-paid': 'Invoice marked as paid',
@@ -233,6 +238,7 @@ export default function InvoicesPage() {
                 <SelectContent>
                   <SelectItem value="all">All Statuses</SelectItem>
                   <SelectItem value="draft">Draft</SelectItem>
+                  <SelectItem value="validated">Validated</SelectItem>
                   <SelectItem value="pending_approval">Pending Approval</SelectItem>
                   <SelectItem value="approved">Approved</SelectItem>
                   <SelectItem value="rejected">Rejected</SelectItem>
@@ -343,7 +349,20 @@ export default function InvoicesPage() {
                       <DropdownMenuLabel>Quick Actions</DropdownMenuLabel>
                       <DropdownMenuSeparator />
                       
+                      {/* A draft has to be validated before it can be
+                          submitted — submit_for_approval refuses anything that
+                          is not already validated. This menu offered Submit on
+                          a draft and nothing else, so every uploaded invoice
+                          hit "it must be validated first" and had nowhere to
+                          go: the validate endpoint existed and had no UI. */}
                       {invoice.current_state === 'draft' && (
+                        <DropdownMenuItem onClick={(e) => handleQuickAction(invoice.id, 'validate', e)}>
+                          <CheckIcon className="mr-2 h-4 w-4" />
+                          Validate
+                        </DropdownMenuItem>
+                      )}
+
+                      {invoice.current_state === 'validated' && (
                         <DropdownMenuItem onClick={(e) => handleQuickAction(invoice.id, 'submit', e)}>
                           <SendIcon className="mr-2 h-4 w-4" />
                           Submit for Approval
