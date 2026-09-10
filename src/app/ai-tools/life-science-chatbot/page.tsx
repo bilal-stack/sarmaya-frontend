@@ -18,7 +18,13 @@ import { StreamParser, type ParsedStreamData, type ParsedContentPart } from '@/l
 import { ResearchToolCard } from '@/components/research-tool-card';
 import { SearchResultsCard } from '@/components/search-results-card';
 import jsPDF from 'jspdf';
-import 'jspdf-autotable';
+// jspdf-autotable 5 no longer patches the jsPDF prototype on import, so a
+// side-effect import leaves doc.autoTable undefined. Verified rather than
+// assumed: requiring the module and reading .autoTable off a fresh jsPDF gives
+// undefined on v5 and a function on v3. The call sites below were reaching it
+// through an `any` cast, so neither tsc nor the build would have caught this —
+// PDF export would have failed only when somebody clicked it.
+import autoTable from 'jspdf-autotable';
 import { MermaidDiagram } from '@/components/mermaid-diagram';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Document, Packer, Paragraph, TextRun, HeadingLevel, Table, TableCell, TableRow, WidthType, AlignmentType, BorderStyle } from 'docx';
@@ -166,7 +172,7 @@ export default function LifeScienceChatbotPage() {
 
     const table = tableElement.querySelector('table');
     if(table) {
-        (doc as any).autoTable({
+        autoTable(doc, {
             html: table,
         });
         doc.save('table.pdf');
@@ -817,7 +823,7 @@ export default function LifeScienceChatbotPage() {
         if (body.length === 0) return;
         
         ensureSpace(60);
-        (doc as any).autoTable({
+        autoTable(doc, {
             startY: cursorY,
             head: [headers],
             body,
