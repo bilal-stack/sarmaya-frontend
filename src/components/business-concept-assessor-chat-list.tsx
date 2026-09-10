@@ -30,7 +30,7 @@ export function BusinessConceptAssessorChatList() {
     const [isFetchingMore, setIsFetchingMore] = useState(false);
     const { activeChat, setActiveChat, refreshCount } = useBusinessConceptAssessor();
 
-    const observer = useRef<IntersectionObserver>();
+    const observer = useRef<IntersectionObserver | null>(null);
 
     const fetchChatRooms = useCallback(async (page = 1, continuationToken: string | null = null) => {
         if (page > 1) {
