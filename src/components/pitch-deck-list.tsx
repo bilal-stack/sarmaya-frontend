@@ -56,7 +56,7 @@ export function PitchDeckList() {
     const [isFetchingMore, setIsFetchingMore] = useState(false);
     const { activeDeckId, setActiveDeckId } = usePitchDeckAdvisor();
 
-    const observer = useRef<IntersectionObserver>();
+    const observer = useRef<IntersectionObserver | null>(null);
     
     const fetchPitchDecks = useCallback(async (page = 1, continuationToken: string | null = null) => {
         if (page > 1) {

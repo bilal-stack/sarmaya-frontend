@@ -29,7 +29,7 @@ export function LifeScienceChatList() {
     const [isFetchingMore, setIsFetchingMore] = useState(false);
     const { activeChatId, setActiveChatId, refreshCount, setActiveChatTitle, activeChatTitle } = useLifeScienceChatbot();
 
-    const observer = useRef<IntersectionObserver>();
+    const observer = useRef<IntersectionObserver | null>(null);
     
     const fetchChatRooms = useCallback(async (page = 1, continuationToken: string | null = null) => {
         if (page > 1) {
