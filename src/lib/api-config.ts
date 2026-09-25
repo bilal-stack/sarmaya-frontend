@@ -40,6 +40,13 @@ export const API_ENDPOINTS = {
     MFA_DISABLE: `${API_BASE_URL}/auth/mfa/disable`,
     MFA_RECOVERY_CODES: `${API_BASE_URL}/auth/mfa/recovery-codes`,
   },
+  VENDOR_RISK: {
+    // The score with the factors that produced it. The score never travels
+    // without them — a bare number is the thing this system argues against,
+    // see supplier_delivery_performance.
+    DETAIL: (id: string) => `${API_BASE_URL}/vendors/${id}/risk`,
+    REFRESH: (id: string) => `${API_BASE_URL}/vendors/${id}/risk/refresh`,
+  },
   INVOICES: {
     LIST: `${API_BASE_URL}/invoices`,
     DETAIL: (id: string) => `${API_BASE_URL}/invoices/${id}`,
@@ -267,6 +274,10 @@ export const API_ENDPOINTS = {
     // ordinary roles.
     APPROVAL: `${API_BASE_URL}/matrices/approval`,
     SOD: `${API_BASE_URL}/matrices/sod`,
+    // The third of the five. Buildable only since risk_score started being
+    // computed — before that it was an Integer nothing assigned, and a grid
+    // over it would have invented the rule it was drawing.
+    VENDOR_RISK: `${API_BASE_URL}/matrices/vendor-risk`,
   },
   DASHBOARD: {
     // The seven Build Book dashboards, computed from history rather than from

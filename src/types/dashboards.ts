@@ -464,3 +464,40 @@ export interface WorkflowState {
   sla: { hours?: number; escalate_to?: string };
   color: string | null;
 }
+
+/** Vendor risk. */
+
+export interface RiskFactor {
+  code: string;
+  points: number;
+  /** The evidence, in a sentence. The score is only useful because each part
+   *  of it can be read back. */
+  detail: string;
+}
+
+export interface VendorRisk {
+  vendor_id: string;
+  score: number;
+  tier: 'low' | 'medium' | 'high';
+  /** The uncapped total, kept so a 100 that was really a 140 is not
+   *  indistinguishable from one that landed on the ceiling. */
+  raw_score: number;
+  capped: boolean;
+  factors: RiskFactor[];
+  window_days: number;
+  /** What a full vendor-risk model would carry that this system does not
+   *  measure. A 12 from two signals is not the same claim as a 12 from seven. */
+  unscored_dimensions: Array<{ code: string; detail: string }>;
+}
+
+export interface VendorRiskMatrix {
+  tiers: string[];
+  factors: string[];
+  /** cells[tier][factor] = how many vendors. */
+  cells: Record<string, Record<string, number>>;
+  vendors_per_tier: Record<string, number>;
+  vendor_count: number;
+  /** Factors nothing currently trips — reported, not omitted. */
+  never_triggered: string[];
+  unscored_dimensions: Array<{ code: string; detail: string }>;
+}
