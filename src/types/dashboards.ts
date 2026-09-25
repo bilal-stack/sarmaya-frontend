@@ -437,3 +437,67 @@ export interface P2PCycleTime {
   typical_total_days: number | null;
   slowest_step: string | null;
 }
+
+/**
+ * Workflow configuration.
+ *
+ * A state machine per record type. The backend validates that a transition
+ * target exists, but not that the graph stays connected — so a non-final state
+ * can be left with no way out, and records that reach it stop there. The
+ * settings screen computes that and says so; nothing else in the system would.
+ */
+
+export interface WorkflowState {
+  id: string;
+  workflow_type: string;
+  state_name: string;
+  display_name: string | null;
+  state_order: number;
+  is_initial: boolean;
+  is_final: boolean;
+  allowed_transitions: string[];
+  /** Permissions required to leave this state, keyed by target. Set in code,
+   *  not configuration — shown read-only so the screen does not imply
+   *  otherwise. */
+  guards: Record<string, string[]>;
+  /** `{}` when none. `hours` alone tracks overdue; `escalate_to` needs hours. */
+  sla: { hours?: number; escalate_to?: string };
+  color: string | null;
+}
+
+/** Vendor risk. */
+
+export interface RiskFactor {
+  code: string;
+  points: number;
+  /** The evidence, in a sentence. The score is only useful because each part
+   *  of it can be read back. */
+  detail: string;
+}
+
+export interface VendorRisk {
+  vendor_id: string;
+  score: number;
+  tier: 'low' | 'medium' | 'high';
+  /** The uncapped total, kept so a 100 that was really a 140 is not
+   *  indistinguishable from one that landed on the ceiling. */
+  raw_score: number;
+  capped: boolean;
+  factors: RiskFactor[];
+  window_days: number;
+  /** What a full vendor-risk model would carry that this system does not
+   *  measure. A 12 from two signals is not the same claim as a 12 from seven. */
+  unscored_dimensions: Array<{ code: string; detail: string }>;
+}
+
+export interface VendorRiskMatrix {
+  tiers: string[];
+  factors: string[];
+  /** cells[tier][factor] = how many vendors. */
+  cells: Record<string, Record<string, number>>;
+  vendors_per_tier: Record<string, number>;
+  vendor_count: number;
+  /** Factors nothing currently trips — reported, not omitted. */
+  never_triggered: string[];
+  unscored_dimensions: Array<{ code: string; detail: string }>;
+}

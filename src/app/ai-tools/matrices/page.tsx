@@ -25,7 +25,9 @@ import { useAuth } from '@/context/auth-context';
 import { API_ENDPOINTS } from '@/lib/api-config';
 import { usePanel } from '@/hooks/use-panel';
 import { Panel, Empty, money } from '@/components/reports/panel';
-import type { ApprovalMatrix, SodMatrix, Barrier } from '@/types/dashboards';
+import type {
+  ApprovalMatrix, SodMatrix, Barrier, VendorRiskMatrix,
+} from '@/types/dashboards';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -65,7 +67,10 @@ export default function MatricesPage() {
 
   const approval = usePanel<ApprovalMatrix>(API_ENDPOINTS.MATRICES.APPROVAL, reloadKey);
   const sod = usePanel<SodMatrix>(API_ENDPOINTS.MATRICES.SOD, reloadKey);
-  const anyLoading = approval.loading || sod.loading;
+  const risk = usePanel<VendorRiskMatrix>(
+    API_ENDPOINTS.MATRICES.VENDOR_RISK, reloadKey,
+  );
+  const anyLoading = approval.loading || sod.loading || risk.loading;
 
   useEffect(() => {
     if (!authLoading && !user) router.push('/login');
@@ -75,6 +80,7 @@ export default function MatricesPage() {
 
   const a = approval.data;
   const s = sod.data;
+  const r = risk.data;
 
   return (
     <div className="p-4 md:p-8 max-w-6xl mx-auto w-full">
@@ -357,6 +363,90 @@ export default function MatricesPage() {
             </div>
           )}
         </Panel>
+
+        {/* --- Vendor risk ------------------------------------------------ */}
+        <Panel
+          icon={<ShieldAlert className="h-4 w-4 text-primary" />}
+          title="Vendor risk"
+          description="Which tier each vendor sits in, and what put it there."
+          state={risk}
+          forbiddenNote={FORBIDDEN}
+        >
+          {!r || r.vendor_count === 0 ? (
+            <Empty>No vendors to score.</Empty>
+          ) : (
+            <div className="space-y-4">
+              <p className="text-xs text-muted-foreground">
+                {/* Why a grid rather than the sorted list the vendor page
+                    already gives you. */}
+                A sorted list tells you who is riskiest. This tells you{' '}
+                <span className="font-medium">which factor is carrying each
+                tier</span> — ten high-risk vendors that are all high for the
+                same reason is one problem with one fix; ten that are high for
+                ten different reasons is ten problems.
+              </p>
+
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="text-left text-muted-foreground border-b">
+                      <th className="py-2 pr-4 font-medium">Tier</th>
+                      <th className="py-2 pr-4 font-medium text-right">Vendors</th>
+                      {r.factors.map((f) => (
+                        <th key={f} className="py-2 px-2 font-medium text-right whitespace-nowrap">
+                          {f.replace(/_/g, ' ')}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {r.tiers.map((tier) => (
+                      <tr key={tier} className="border-b last:border-0">
+                        <td className="py-2 pr-4 capitalize font-medium">{tier}</td>
+                        <td className="py-2 pr-4 text-right font-mono tabular-nums">
+                          {r.vendors_per_tier[tier] ?? 0}
+                        </td>
+                        {r.factors.map((f) => {
+                          const n = r.cells[tier]?.[f] ?? 0;
+                          return (
+                            <td
+                              key={f}
+                              className={`py-2 px-2 text-right font-mono tabular-nums ${
+                                n === 0 ? 'text-muted-foreground/40' : ''
+                              }`}
+                            >
+                              {n}
+                            </td>
+                          );
+                        })}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {r.never_triggered.length > 0 && (
+                <p className="text-xs text-muted-foreground">
+                  Never triggered:{' '}
+                  <span className="font-mono">
+                    {r.never_triggered.map((f) => f.replace(/_/g, ' ')).join(', ')}
+                  </span>
+                  . Shown rather than dropped — a factor nothing trips is either
+                  watching something that does not happen or is not watching,
+                  and a grid that hides the empty column cannot tell you which.
+                </p>
+              )}
+
+              <p className="text-xs text-muted-foreground">
+                Not covered:{' '}
+                {r.unscored_dimensions.map((d) => d.code.replace(/_/g, ' ')).join(', ')}.
+                A score built from five signals is a different claim from one
+                built from eight.
+              </p>
+            </div>
+          )}
+        </Panel>
+
       </div>
     </div>
   );

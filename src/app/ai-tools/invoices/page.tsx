@@ -116,11 +116,17 @@ export default function InvoicesPage() {
     setFilters(prev => ({ ...prev, [key]: value, offset: 0 }));
   };
 
-  const formatCurrency = (amount: string) => {
+  const formatCurrency = (amount: string | null | undefined) => {
+    // Same guard as the detail page: parseFloat(null) is NaN and Intl renders
+    // that as "PKRNaN". The list only shows total_amount, which is NOT NULL,
+    // so this is defence rather than a live bug — but the two formatters
+    // should not disagree about what a missing number looks like.
+    const value = parseFloat(amount ?? '');
+    if (!Number.isFinite(value)) return 'N/A';
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: 'PKR',
-    }).format(parseFloat(amount));
+    }).format(value);
   };
 
   const formatDate = (dateString: string) => {
