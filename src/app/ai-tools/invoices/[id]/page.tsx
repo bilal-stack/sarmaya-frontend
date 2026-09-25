@@ -153,11 +153,17 @@ export default function InvoiceDetailPage() {
     fetchInvoiceDetail();
   }, [invoiceId, authLoading]);
 
-  const formatCurrency = (amount: string, currency: string = 'USD') => {
+  const formatCurrency = (amount: string | null | undefined, currency: string = 'USD') => {
+    // parseFloat(null) is NaN and Intl formats NaN as "PKRNaN", which is what
+    // this rendered for every invoice with no subtotal or tax — both columns
+    // are nullable, so an invoice captured with a total and no breakdown
+    // showed it. "N/A" is what the same page already uses for a missing date.
+    const value = parseFloat(amount ?? '');
+    if (!Number.isFinite(value)) return 'N/A';
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: currency,
-    }).format(parseFloat(amount));
+    }).format(value);
   };
 
   const formatDate = (dateString: string | null) => {
