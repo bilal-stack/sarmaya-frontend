@@ -92,6 +92,13 @@ const tools = [
     link: '/ai-tools/ap-treasury',
   },
   {
+    name: 'Workflows',
+    description:
+      'The state machine behind each record type — which states it can move to, and how long it may sit in one before it counts as late. Also the one thing the API will not tell you: a state that leads nowhere and is not an ending, where records arrive and quietly stop.',
+    icon: <Network className="h-8 w-8 text-primary" />,
+    link: '/ai-tools/system/workflows',
+  },
+  {
     name: 'Accounting System',
     description:
       'Connect QuickBooks and released payments post to your own books as journal entries — after the money moves, never before. When a connection dies nothing errors; entries just stop arriving, so this is where that shows.',
