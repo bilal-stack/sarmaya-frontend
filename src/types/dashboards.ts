@@ -437,3 +437,30 @@ export interface P2PCycleTime {
   typical_total_days: number | null;
   slowest_step: string | null;
 }
+
+/**
+ * Workflow configuration.
+ *
+ * A state machine per record type. The backend validates that a transition
+ * target exists, but not that the graph stays connected — so a non-final state
+ * can be left with no way out, and records that reach it stop there. The
+ * settings screen computes that and says so; nothing else in the system would.
+ */
+
+export interface WorkflowState {
+  id: string;
+  workflow_type: string;
+  state_name: string;
+  display_name: string | null;
+  state_order: number;
+  is_initial: boolean;
+  is_final: boolean;
+  allowed_transitions: string[];
+  /** Permissions required to leave this state, keyed by target. Set in code,
+   *  not configuration — shown read-only so the screen does not imply
+   *  otherwise. */
+  guards: Record<string, string[]>;
+  /** `{}` when none. `hours` alone tracks overdue; `escalate_to` needs hours. */
+  sla: { hours?: number; escalate_to?: string };
+  color: string | null;
+}

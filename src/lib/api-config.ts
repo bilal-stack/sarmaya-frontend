@@ -137,6 +137,13 @@ export const API_ENDPOINTS = {
     APPROVAL_POLICIES: `${API_BASE_URL}/config/approval-policies`,
     SIMULATE: `${API_BASE_URL}/config/approval-policies/simulate`,
     WORKFLOW_STATES: (type: string) => `${API_BASE_URL}/config/workflow/${type}/states`,
+    // Both replace rather than patch, and both version the whole workflow as
+    // one document so a bad edit can be restored as a set rather than undone
+    // state by state.
+    WORKFLOW_TRANSITIONS: (type: string, state: string) =>
+      `${API_BASE_URL}/config/workflow/${type}/states/${state}/transitions`,
+    WORKFLOW_SLA: (type: string, state: string) =>
+      `${API_BASE_URL}/config/workflow/${type}/states/${state}/sla`,
     AUTOPILOT: `${API_BASE_URL}/config/autopilot`,
     VERSIONS: (type: string, key: string) => `${API_BASE_URL}/config/versions/${type}/${key}`,
     RESTORE: (type: string, key: string, version: number) =>
