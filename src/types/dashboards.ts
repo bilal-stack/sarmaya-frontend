@@ -501,3 +501,19 @@ export interface VendorRiskMatrix {
   never_triggered: string[];
   unscored_dimensions: Array<{ code: string; detail: string }>;
 }
+
+/** Three-way match tolerance. */
+
+export interface MatchTolerance {
+  amount_percent: number;
+  quantity_percent: number;
+  defaults: { amount_percent: number; quantity_percent: number };
+  /** A tenant on defaults has not made a decision; one on configured values
+   *  has. Different states on a control screen. */
+  is_default: boolean;
+  max_percent: number;
+  /** Always null. The Build Book asks for a tolerance matrix; the engine
+   *  applies one pair of numbers to every line of every invoice, and drawing
+   *  axes would imply a control it does not apply. */
+  axes: null;
+}
