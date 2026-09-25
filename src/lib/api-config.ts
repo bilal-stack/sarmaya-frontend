@@ -152,6 +152,10 @@ export const API_ENDPOINTS = {
     WORKFLOW_SLA: (type: string, state: string) =>
       `${API_BASE_URL}/config/workflow/${type}/states/${state}/sla`,
     AUTOPILOT: `${API_BASE_URL}/config/autopilot`,
+    // How far an invoice may differ from what arrived and still match. GET and
+    // PUT the same path; the PUT is versioned and audited, because widening
+    // this far enough turns three-way matching into a formality.
+    MATCH_TOLERANCE: `${API_BASE_URL}/config/match-tolerance`,
     VERSIONS: (type: string, key: string) => `${API_BASE_URL}/config/versions/${type}/${key}`,
     RESTORE: (type: string, key: string, version: number) =>
       `${API_BASE_URL}/config/versions/${type}/${key}/${version}/restore`,

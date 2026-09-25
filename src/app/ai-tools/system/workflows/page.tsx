@@ -40,6 +40,7 @@ import {
 import {
   Loader2, Network, AlertTriangle, Clock, Lock, Flag, Play, Save,
 } from 'lucide-react';
+import { MatchToleranceCard } from '@/components/config/match-tolerance-card';
 
 //: The record types that carry a workflow. Mirrors DEFAULT_WORKFLOWS in
 //: app/services/config_defaults.py.
@@ -155,6 +156,13 @@ export default function WorkflowSettingsPage() {
         <p className="text-muted-foreground mt-1">
           Which states a record can move to, and how long it may sit in one.
         </p>
+      </div>
+
+      {/* The other thing on this page that decides whether a control refuses
+          something. Sits above the workflow picker because it applies to every
+          workflow rather than to the one selected below. */}
+      <div className="mb-6">
+        <MatchToleranceCard />
       </div>
 
       <div className="mb-6 flex flex-wrap items-center gap-3">
