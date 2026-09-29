@@ -282,6 +282,12 @@ export const API_ENDPOINTS = {
     // computed — before that it was an Integer nothing assigned, and a grid
     // over it would have invented the rule it was drawing.
     VENDOR_RISK: `${API_BASE_URL}/matrices/vendor-risk`,
+    // The fourth of the five, and the only one whose finding is about depth
+    // rather than coverage: whether a requirement binds every caller or only
+    // an HTTP route. Tolerance is the fifth and has no matrix, because the
+    // engine applies one pair of percentages to everything and there are no
+    // axes to draw — stated on the tolerance card instead.
+    EVIDENCE: `${API_BASE_URL}/matrices/evidence`,
   },
   DASHBOARD: {
     // The seven Build Book dashboards, computed from history rather than from
