@@ -502,6 +502,68 @@ export interface VendorRiskMatrix {
   unscored_dimensions: Array<{ code: string; detail: string }>;
 }
 
+/** Where a requirement is enforced, which is what decides who it binds.
+ *  A rule in a request schema refuses an HTTP caller and nothing else; a rule
+ *  in the service binds every caller there is. */
+export type EvidenceLayer = 'api_schema' | 'service';
+
+export interface EvidenceWorkflow {
+  workflow: string;
+  layer: EvidenceLayer;
+  enforced_at: string;
+}
+
+export interface EvidenceRule {
+  rule: string;
+  artifact: string;
+  required_when: string;
+  gates: string[];
+  waiver: {
+    at: string;
+    needs: string;
+    recorded_as: string;
+    held_by: string;
+  } | null;
+  workflows: EvidenceWorkflow[];
+  /** The weakest layer any workflow enforces this at — a control is as
+   *  binding as its loosest application. */
+  weakest_layer: EvidenceLayer;
+  /** One control, two depths. Stops a reader concluding from
+   *  bound_at_the_service that the rule is uniform. */
+  enforced_at_mixed_depths: boolean;
+  waivable: boolean;
+}
+
+/** What the system makes somebody produce, when, and who the rule binds. */
+export interface EvidenceMatrix {
+  gates: string[];
+  rules: EvidenceRule[];
+  /** Binds every caller, not only a route. The stronger position. */
+  bound_at_the_service: string[];
+  /** Enforced in a request schema and nowhere deeper: refused over HTTP, not
+   *  refused when the method is called directly. Named per workflow rather
+   *  than per rule, because naming the rule alone would read as "the control
+   *  is missing" when it is mostly present. */
+  bound_only_at_the_api: Array<{
+    rule: string;
+    workflow: string;
+    enforced_at: string;
+  }>;
+  waivable_with_a_recorded_reason: Array<{
+    rule: string;
+    at: string;
+    recorded_as: string;
+  }>;
+  /** Asked for by the Build Book, enforced by nothing. Declared, because a
+   *  matrix listing only what is enforced reads as though it were complete. */
+  asked_for_but_not_required: Array<{
+    requirement: string;
+    asked_by: string;
+    status: string;
+    would_be_enforced_at: string;
+  }>;
+}
+
 /** Three-way match tolerance. */
 
 export interface MatchTolerance {

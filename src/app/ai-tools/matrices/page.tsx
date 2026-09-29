@@ -1,7 +1,8 @@
 'use client';
 
 /**
- * The control matrices: approval routing and segregation of duties as grids.
+ * The control matrices: approval routing, segregation of duties, vendor risk
+ * and evidence requirements, each as a grid.
  *
  * Build Book, Global Matrices. The rules on this page already exist and are
  * already enforced — nothing here is a new control, and nothing here decides
@@ -12,10 +13,18 @@
  *
  * So the findings come first and the grids come second. A page that opened
  * with a tidy table of rules would read as reassurance; the useful content is
- * the three or four rows where something is missing, and those have to be the
+ * the handful of rows where something is missing, and those have to be the
  * first thing on screen rather than something you notice by scanning.
  *
- * Both panels read with audit.view rather than the dashboard permission, so
+ * The evidence panel is the odd one out and deliberately so: its finding is
+ * not about coverage but about depth. Ten workflows refuse a blank rejection
+ * reason and all ten refuse it over HTTP, so an API client sees one consistent
+ * control — but four enforce it only in the request schema, and those four
+ * stop binding the moment the method is called from somewhere that is not a
+ * route. That is invisible in any view of one layer, which is the whole reason
+ * the column exists.
+ *
+ * Every panel reads with audit.view rather than the dashboard permission, so
  * ordinary roles get a 403 — stated as a fact, not offered a retry button.
  */
 
@@ -26,7 +35,7 @@ import { API_ENDPOINTS } from '@/lib/api-config';
 import { usePanel } from '@/hooks/use-panel';
 import { Panel, Empty, money } from '@/components/reports/panel';
 import type {
-  ApprovalMatrix, SodMatrix, Barrier, VendorRiskMatrix,
+  ApprovalMatrix, SodMatrix, Barrier, VendorRiskMatrix, EvidenceMatrix,
 } from '@/types/dashboards';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -34,7 +43,7 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import {
   Loader2, RefreshCw, Grid3x3, ShieldAlert, AlertTriangle, CheckCircle2,
-  CircleSlash, Lock,
+  CircleSlash, Lock, FileCheck,
 } from 'lucide-react';
 
 const FORBIDDEN =
@@ -60,6 +69,23 @@ const BARRIER: Record<Barrier, { label: string; className: string; icon: React.R
   },
 };
 
+/** How deep a requirement goes, and therefore who it binds. Weakest first. */
+const LAYER: Record<
+  'api_schema' | 'service',
+  { label: string; className: string; icon: React.ReactNode }
+> = {
+  api_schema: {
+    label: 'HTTP callers only',
+    className: 'bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/30',
+    icon: <ShieldAlert className="h-3 w-3" />,
+  },
+  service: {
+    label: 'Every caller',
+    className: 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-500/30',
+    icon: <Lock className="h-3 w-3" />,
+  },
+};
+
 export default function MatricesPage() {
   const router = useRouter();
   const { user, isLoading: authLoading } = useAuth();
@@ -70,7 +96,11 @@ export default function MatricesPage() {
   const risk = usePanel<VendorRiskMatrix>(
     API_ENDPOINTS.MATRICES.VENDOR_RISK, reloadKey,
   );
-  const anyLoading = approval.loading || sod.loading || risk.loading;
+  const evidence = usePanel<EvidenceMatrix>(
+    API_ENDPOINTS.MATRICES.EVIDENCE, reloadKey,
+  );
+  const anyLoading =
+    approval.loading || sod.loading || risk.loading || evidence.loading;
 
   useEffect(() => {
     if (!authLoading && !user) router.push('/login');
@@ -81,6 +111,7 @@ export default function MatricesPage() {
   const a = approval.data;
   const s = sod.data;
   const r = risk.data;
+  const e = evidence.data;
 
   return (
     <div className="p-4 md:p-8 max-w-6xl mx-auto w-full">
@@ -91,8 +122,9 @@ export default function MatricesPage() {
             Control matrices
           </h1>
           <p className="text-muted-foreground mt-1">
-            The approval and segregation rules as grids, so the gaps show.
-            Everything here is already enforced — this page changes nothing.
+            Approval, segregation of duties, vendor risk and evidence as grids,
+            so the gaps show. Everything here is already enforced — this page
+            changes nothing.
           </p>
         </div>
         <Button
@@ -171,6 +203,37 @@ export default function MatricesPage() {
             detail={s?.depends_on_the_runtime_check
               .map((r) => `${r.rule} (${r.roles.join(', ')})`)
               .join('; ')}
+          />
+          <Finding
+            count={e?.bound_only_at_the_api.length ?? 0}
+            loading={evidence.loading}
+            forbidden={evidence.status === 403}
+            title="Requirements enforced only at the API"
+            body={
+              'Every one of these refuses a blank reason over HTTP, so nothing '
+              + 'here is a hole an API client can walk through. The rule lives '
+              + 'in the request schema and nowhere deeper, so it stops binding '
+              + 'the moment the method is called from somewhere that is not a '
+              + 'route — another service, a scheduled job, a migration.'
+            }
+            detail={e?.bound_only_at_the_api
+              .map((x) => x.workflow.replace(/_/g, ' '))
+              .join(', ')}
+          />
+          <Finding
+            count={e?.asked_for_but_not_required.length ?? 0}
+            loading={evidence.loading}
+            forbidden={evidence.status === 403}
+            title="Evidence asked for and never demanded"
+            body={
+              'The Build Book asks for it and no path refuses anything for its '
+              + 'absence. It can be attached and the evidence pack collects it '
+              + 'if somebody does — which is not the same as a requirement, and '
+              + 'is the difference this row exists to keep visible.'
+            }
+            detail={e?.asked_for_but_not_required
+              .map((x) => x.requirement.replace(/_/g, ' '))
+              .join(', ')}
           />
         </CardContent>
       </Card>
@@ -443,6 +506,147 @@ export default function MatricesPage() {
                 A score built from five signals is a different claim from one
                 built from eight.
               </p>
+            </div>
+          )}
+        </Panel>
+
+        {/* --- Evidence requirements ------------------------------------- */}
+        <Panel
+          icon={<FileCheck className="h-4 w-4 text-primary" />}
+          title="Evidence requirements"
+          description="What must be produced, at which gate, and who the rule binds."
+          state={evidence}
+          forbiddenNote={FORBIDDEN}
+        >
+          {!e || e.rules.length === 0 ? (
+            <Empty>No evidence requirements declared.</Empty>
+          ) : (
+            <div className="space-y-4">
+              <p className="text-xs text-muted-foreground">
+                {/* Why this grid is not about coverage like the other three. */}
+                The other matrices ask what is not covered. This one asks{' '}
+                <span className="font-medium">how deep each rule goes</span>,
+                because a requirement in a request schema and the same
+                requirement in a service look identical from the outside and
+                bind entirely different sets of callers.
+              </p>
+
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="text-left text-muted-foreground border-b">
+                      <th className="py-2 pr-4 font-medium">Requirement</th>
+                      <th className="py-2 pr-4 font-medium">What must exist</th>
+                      <th className="py-2 pr-4 font-medium">When</th>
+                      <th className="py-2 pr-4 font-medium">Demanded at</th>
+                      <th className="py-2 font-medium">Binds</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {e.rules.map((rule) => {
+                      const layer = LAYER[rule.weakest_layer];
+                      return (
+                        <tr key={rule.rule} className="border-b last:border-0 align-top">
+                          <td className="py-2 pr-4 font-medium">
+                            {rule.rule.replace(/_/g, ' ')}
+                            {rule.waivable && (
+                              <Badge
+                                variant="outline"
+                                className="ml-2 font-normal text-[10px] align-middle"
+                              >
+                                waivable
+                              </Badge>
+                            )}
+                          </td>
+                          <td className="py-2 pr-4 text-muted-foreground">
+                            {rule.artifact}
+                          </td>
+                          <td className="py-2 pr-4 text-muted-foreground">
+                            {rule.required_when}
+                          </td>
+                          <td className="py-2 pr-4 whitespace-nowrap">
+                            {rule.gates.join(', ')}
+                          </td>
+                          <td className="py-2">
+                            <Badge
+                              variant="outline"
+                              className={`font-normal gap-1 ${layer.className}`}
+                            >
+                              {layer.icon}
+                              {layer.label}
+                            </Badge>
+                            {rule.enforced_at_mixed_depths && (
+                              <p className="text-[11px] text-muted-foreground mt-1">
+                                {/* The row that would otherwise read as a
+                                    single verdict on ten different workflows. */}
+                                Mixed: {rule.workflows.filter(
+                                  (w) => w.layer === 'service',
+                                ).length} of {rule.workflows.length} workflows
+                                enforce it in the service.
+                              </p>
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+
+              {e.bound_only_at_the_api.length > 0 && (
+                <div className="rounded-md border border-amber-500/30 bg-amber-500/5 p-3">
+                  <p className="text-xs font-medium flex items-center gap-1.5">
+                    <ShieldAlert className="h-3.5 w-3.5 text-amber-600" />
+                    Enforced in the request schema and nowhere deeper
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    These refuse a blank reason over HTTP. They do not refuse
+                    one when the service method is called directly, so the
+                    control does not reach a background job, a migration or
+                    another service that rejects on somebody&apos;s behalf.
+                  </p>
+                  <ul className="mt-2 space-y-1">
+                    {e.bound_only_at_the_api.map((x) => (
+                      <li key={`${x.rule}-${x.workflow}`} className="text-xs">
+                        <span className="font-medium">
+                          {x.workflow.replace(/_/g, ' ')}
+                        </span>
+                        <span className="text-muted-foreground font-mono ml-2">
+                          {x.enforced_at}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {e.waivable_with_a_recorded_reason.map((w) => (
+                <p key={w.rule} className="text-xs text-muted-foreground">
+                  <span className="font-medium">
+                    {w.rule.replace(/_/g, ' ')}
+                  </span>{' '}
+                  can be waived at {w.at}, and the waiver is itself evidence —
+                  recorded as {w.recorded_as}. A rule nobody can ever step past
+                  gets worked around outside the system instead, which is worse
+                  than a waiver somebody signed.
+                </p>
+              ))}
+
+              {e.asked_for_but_not_required.length > 0 && (
+                <p className="text-xs text-muted-foreground">
+                  Asked for and not required:{' '}
+                  {e.asked_for_but_not_required.map((x) => (
+                    <span key={x.requirement}>
+                      <span className="font-mono">
+                        {x.requirement.replace(/_/g, ' ')}
+                      </span>{' '}
+                      ({x.status})
+                    </span>
+                  ))}
+                  . Stated rather than left out, because a list of only what is
+                  enforced reads as though it were the whole list.
+                </p>
+              )}
             </div>
           )}
         </Panel>
