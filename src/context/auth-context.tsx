@@ -10,6 +10,7 @@ import {
   type ReactNode,
 } from 'react';
 import { useRouter } from 'next/navigation';
+import * as Sentry from '@sentry/nextjs';
 import { API_ENDPOINTS } from '@/lib/api-config';
 
 type UserData = {
@@ -72,6 +73,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<UserData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
+
+  // Who an error report is about, by id only - never the email or name. One
+  // effect on `user` rather than a call at each place it is set, so login,
+  // restore-from-storage and logout cannot disagree. A no-op while error
+  // tracking is off.
+  useEffect(() => {
+    Sentry.setUser(user ? { id: user.id } : null);
+  }, [user]);
 
   // Load user from localStorage on mount
   useEffect(() => {

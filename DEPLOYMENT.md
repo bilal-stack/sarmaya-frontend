@@ -50,6 +50,37 @@ and changing it later requires a **redeploy**, not just an env update.
 
 Repeat for `preview` if you want preview deployments pointed at a staging API.
 
+### 3a. Error tracking (optional)
+
+Off unless set. Use a Sentry project for **this app** (platform: Next.js), not
+the backend's, so browser errors and API errors land in separate lists.
+
+```bash
+npx vercel env add NEXT_PUBLIC_SENTRY_DSN production
+```
+
+The DSN is public by design - it ships in the browser bundle - and like the API
+URL it is inlined at build, so changing it needs a redeploy. A value that is
+not a DSN (the org slug, a project id) leaves error tracking off and says so in
+the browser console.
+
+For stack traces that read as TypeScript rather than minified bundle, also set
+these as **build** variables. `SENTRY_AUTH_TOKEN` is a secret: never give it
+the `NEXT_PUBLIC_` prefix.
+
+```bash
+npx vercel env add SENTRY_AUTH_TOKEN production   # Sentry > Settings > Auth Tokens
+npx vercel env add SENTRY_PROJECT production      # this app's project slug
+```
+
+Without them the build skips the upload and succeeds. Source maps are deleted
+from the output after upload, so the original source is not served publicly.
+
+What is never sent, whatever is set: screen recordings (Session Replay is not
+installed), request bodies, IP addresses, the access token, and bank, tax,
+salary, MFA and personal values. Every one of those was checked against what a
+real browser session actually sent; see `src/lib/error-tracking.ts`.
+
 ## 4. Let the API accept the new origin
 
 On the backend, add the Vercel domain to `CORS_ORIGINS`. It is settings-driven,

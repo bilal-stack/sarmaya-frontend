@@ -23,7 +23,10 @@ jobs:
 
       - uses: actions/setup-node@v7
         with:
-          node-version: '20'
+          # 24, the current LTS and what development runs on. 20 reached end of
+          # life in April 2026, and it cannot run the TypeScript tests: `npm
+          # test` relies on Node stripping types itself, which 20 does not do.
+          node-version: '24'
           cache: npm
 
       # `npm ci` rather than `npm install`: it installs exactly what
@@ -41,6 +44,11 @@ jobs:
 
       - name: Typecheck
         run: npx tsc --noEmit
+
+      - name: Test
+        # Plain `node --test`. There is no test framework to install: Node
+        # runs the TypeScript directly.
+        run: npm test
 
       - name: Build
         # NEXT_PUBLIC_* values are inlined at build time, so one is needed for
